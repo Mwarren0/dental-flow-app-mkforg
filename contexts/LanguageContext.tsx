@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -22,11 +22,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
-  useEffect(() => {
-    loadSavedLanguage();
-  }, []);
-
-  const loadSavedLanguage = async () => {
+  const loadSavedLanguage = useCallback(async () => {
     try {
       const savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
       if (savedLanguage && availableLanguages.some(lang => lang.code === savedLanguage)) {
@@ -36,7 +32,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.log('Error loading saved language:', error);
     }
-  };
+  }, [i18n]);
+
+  useEffect(() => {
+    loadSavedLanguage();
+  }, [loadSavedLanguage]);
 
   const changeLanguage = async (language: string) => {
     try {
