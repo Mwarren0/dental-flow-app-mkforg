@@ -13,6 +13,7 @@ export default function PatientsScreen() {
   const { t } = useTranslation();
   const { patients, loading, deletePatient } = usePatients();
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredPatients = patients.filter(patient =>
     patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -21,6 +22,8 @@ export default function PatientsScreen() {
   );
 
   const handleDeletePatient = (patientId: string, patientName: string) => {
+    if (deletingId) return; // Prevent multiple delete attempts
+    
     Alert.alert(
       t('common.confirmDelete'),
       t('patients.confirmDeleteMessage', { name: patientName }),
@@ -31,11 +34,22 @@ export default function PatientsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deletePatient(patientId);
+              setDeletingId(patientId);
+              console.log('Starting delete operation for patient:', patientId);
+              
+              const result = await deletePatient(patientId);
+              console.log('Delete operation result:', result);
+              
               Alert.alert(t('common.success'), t('patients.deleteSuccess'));
             } catch (error) {
-              Alert.alert(t('common.error'), t('patients.deleteError'));
-              console.log('Error deleting patient:', error);
+              console.error('Error deleting patient:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+              Alert.alert(
+                t('common.error'), 
+                `${t('patients.deleteError')}\n\nDetails: ${errorMessage}`
+              );
+            } finally {
+              setDeletingId(null);
             }
           }
         }

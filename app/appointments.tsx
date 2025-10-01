@@ -15,6 +15,7 @@ export default function AppointmentsScreen() {
   const { patients } = usePatients();
   const { procedures } = useProcedures();
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const statuses = [
     { key: 'all', label: t('common.all') },
@@ -32,6 +33,8 @@ export default function AppointmentsScreen() {
   const getProcedureById = (id: string) => procedures.find(p => p.id === id);
 
   const handleDeleteAppointment = (appointmentId: string) => {
+    if (deletingId) return; // Prevent multiple delete attempts
+    
     Alert.alert(
       t('common.confirmDelete'),
       t('appointments.confirmDeleteMessage'),
@@ -42,11 +45,22 @@ export default function AppointmentsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteAppointment(appointmentId);
+              setDeletingId(appointmentId);
+              console.log('Starting delete operation for appointment:', appointmentId);
+              
+              const result = await deleteAppointment(appointmentId);
+              console.log('Delete operation result:', result);
+              
               Alert.alert(t('common.success'), t('appointments.deleteSuccess'));
             } catch (error) {
-              Alert.alert(t('common.error'), t('appointments.deleteError'));
-              console.log('Error deleting appointment:', error);
+              console.error('Error deleting appointment:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+              Alert.alert(
+                t('common.error'), 
+                `${t('appointments.deleteError')}\n\nDetails: ${errorMessage}`
+              );
+            } finally {
+              setDeletingId(null);
             }
           }
         }

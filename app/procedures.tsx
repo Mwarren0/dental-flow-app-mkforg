@@ -14,6 +14,7 @@ export default function ProceduresScreen() {
   const { procedures, loading, deleteProcedure } = useProcedures();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const categories = [
     { key: 'all', label: t('common.all') },
@@ -35,6 +36,8 @@ export default function ProceduresScreen() {
   });
 
   const handleDeleteProcedure = (procedureId: string, procedureName: string) => {
+    if (deletingId) return; // Prevent multiple delete attempts
+    
     Alert.alert(
       t('common.confirmDelete'),
       t('procedures.confirmDeleteMessage', { name: procedureName }),
@@ -45,11 +48,22 @@ export default function ProceduresScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteProcedure(procedureId);
+              setDeletingId(procedureId);
+              console.log('Starting delete operation for procedure:', procedureId);
+              
+              const result = await deleteProcedure(procedureId);
+              console.log('Delete operation result:', result);
+              
               Alert.alert(t('common.success'), t('procedures.deleteSuccess'));
             } catch (error) {
-              Alert.alert(t('common.error'), t('procedures.deleteError'));
-              console.log('Error deleting procedure:', error);
+              console.error('Error deleting procedure:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+              Alert.alert(
+                t('common.error'), 
+                `${t('procedures.deleteError')}\n\nDetails: ${errorMessage}`
+              );
+            } finally {
+              setDeletingId(null);
             }
           }
         }
