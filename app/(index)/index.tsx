@@ -1,181 +1,208 @@
-import React from "react";
-import { Stack, router } from "expo-router";
-import { FlatList, Pressable, StyleSheet, View, Text } from "react-native";
-// Components
-import { IconCircle } from "@/components/IconCircle";
-import { IconSymbol } from "@/components/IconSymbol";
-import { BodyScrollView } from "@/components/BodyScrollView";
-import { Button } from "@/components/button";
-// Constants & Hooks
-import { backgroundColors } from "@/constants/Colors";
 
-const ICON_COLOR = "#007AFF";
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Stack, router } from 'expo-router';
+import { IconSymbol } from '@/components/IconSymbol';
+import { StatCard } from '@/components/StatCard';
+import { colors, commonStyles } from '@/styles/commonStyles';
+import { useDashboardStats } from '@/hooks/useData';
 
-export default function HomeScreen() {
+export default function DashboardScreen() {
+  const { stats, loading } = useDashboardStats();
 
-  const modalDemos = [
+  const quickActions = [
     {
-      title: "Standard Modal",
-      description: "Full screen modal presentation",
-      route: "/modal",
-      color: "#007AFF",
+      title: 'Patients',
+      icon: 'person.2',
+      color: colors.primary,
+      route: '/patients',
+      description: 'Manage patient records',
     },
     {
-      title: "Form Sheet",
-      description: "Bottom sheet with detents and grabber",
-      route: "/formsheet",
-      color: "#34C759",
+      title: 'Appointments',
+      icon: 'calendar',
+      color: colors.secondary,
+      route: '/appointments',
+      description: 'Schedule & view appointments',
     },
     {
-      title: "Transparent Modal",
-      description: "Overlay without obscuring background",
-      route: "/transparent-modal",
-      color: "#FF9500",
-    }
+      title: 'Procedures',
+      icon: 'medical.thermometer',
+      color: colors.accent,
+      route: '/procedures',
+      description: 'Manage dental procedures',
+    },
+    {
+      title: 'Payments',
+      icon: 'creditcard',
+      color: colors.success,
+      route: '/payments',
+      description: 'Track payments & billing',
+    },
   ];
-
-  const renderModalDemo = ({ item }: { item: typeof modalDemos[0] }) => (
-    <View style={styles.demoCard}>
-      <View style={[styles.demoIcon, { backgroundColor: item.color }]}>
-        <IconSymbol name="square.grid.3x3" color="white" size={24} />
-      </View>
-      <View style={styles.demoContent}>
-        <Text style={styles.demoTitle}>{item.title}</Text>
-        <Text style={styles.demoDescription}>{item.description}</Text>
-      </View>
-      <Button
-        variant="outline"
-        size="sm"
-        onPress={() => router.push(item.route as any)}
-      >
-        Try It
-      </Button>
-    </View>
-  );
-
-  const renderEmptyList = () => (
-    <BodyScrollView contentContainerStyle={styles.emptyStateContainer}>
-      <IconCircle
-        emoji=""
-        backgroundColor={
-          backgroundColors[Math.floor(Math.random() * backgroundColors.length)]
-        }
-      />
-    </BodyScrollView>
-  );
 
   const renderHeaderRight = () => (
     <Pressable
-      onPress={() => {console.log("plus")}}
-      style={styles.headerButtonContainer}
+      onPress={() => router.push('/settings')}
+      style={styles.headerButton}
     >
-      <IconSymbol name="plus" color={ICON_COLOR} />
+      <IconSymbol name="gear" color={colors.primary} size={24} />
     </Pressable>
   );
 
-  const renderHeaderLeft = () => (
-    <Pressable
-      onPress={() => {console.log("gear")}}
-      style={styles.headerButtonContainer}
-    >
-      <IconSymbol
-        name="gear"
-        color={ICON_COLOR}
-      />
-    </Pressable>
-  );
+  if (loading) {
+    return (
+      <View style={[commonStyles.container, commonStyles.centerContent]}>
+        <Text style={commonStyles.text}>Loading dashboard...</Text>
+      </View>
+    );
+  }
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: "Building the app...",
+          title: 'Dental Care Dashboard',
           headerRight: renderHeaderRight,
-          headerLeft: renderHeaderLeft,
+          headerStyle: { backgroundColor: colors.backgroundAlt },
+          headerTitleStyle: { color: colors.text, fontWeight: '600' },
         }}
       />
-      <View style={styles.container}>
-        <FlatList
-          data={modalDemos}
-          renderItem={renderModalDemo}
-          keyExtractor={(item) => item.route}
-          contentContainerStyle={styles.listContainer}
-          contentInsetAdjustmentBehavior="automatic"
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+      <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Welcome Section */}
+          <View style={styles.welcomeSection}>
+            <Text style={styles.welcomeTitle}>Welcome back, Doctor!</Text>
+            <Text style={styles.welcomeSubtitle}>
+              Here&apos;s your practice overview for today
+            </Text>
+          </View>
+
+          {/* Stats Cards */}
+          <View style={styles.statsSection}>
+            <Text style={styles.sectionTitle}>Today&apos;s Overview</Text>
+            <View style={styles.statsGrid}>
+              <StatCard
+                title="Today&apos;s Appointments"
+                value={stats?.todayAppointments || 0}
+                icon="calendar"
+                color={colors.primary}
+              />
+              <StatCard
+                title="Total Patients"
+                value={stats?.totalPatients || 0}
+                icon="person.2"
+                color={colors.secondary}
+              />
+            </View>
+            <View style={styles.statsGrid}>
+              <StatCard
+                title="Weekly Revenue"
+                value={`$${stats?.weeklyRevenue || 0}`}
+                icon="dollarsign.circle"
+                color={colors.success}
+              />
+              <StatCard
+                title="Pending Payments"
+                value={stats?.pendingPayments || 0}
+                icon="exclamationmark.triangle"
+                color={colors.warning}
+              />
+            </View>
+          </View>
+
+          {/* Quick Actions */}
+          <View style={styles.actionsSection}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <View style={styles.actionsGrid}>
+              {quickActions.map((action) => (
+                <Pressable
+                  key={action.route}
+                  style={[styles.actionCard, commonStyles.card]}
+                  onPress={() => router.push(action.route as any)}
+                >
+                  <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
+                    <IconSymbol name={action.icon as any} color="white" size={24} />
+                  </View>
+                  <Text style={styles.actionTitle}>{action.title}</Text>
+                  <Text style={styles.actionDescription}>{action.description}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  headerSection: {
+  content: {
     padding: 20,
-    paddingBottom: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+  welcomeSection: {
+    marginBottom: 32,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text,
     marginBottom: 8,
   },
-  headerSubtitle: {
+  welcomeSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     lineHeight: 22,
   },
-  listContainer: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+  statsSection: {
+    marginBottom: 32,
   },
-  demoCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  statsGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    gap: 12,
+    marginBottom: 12,
   },
-  demoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  actionsSection: {
+    marginBottom: 32,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  actionCard: {
+    width: '48%',
+    alignItems: 'center',
+    padding: 20,
+  },
+  actionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginBottom: 12,
   },
-  demoContent: {
-    flex: 1,
-  },
-  demoTitle: {
-    fontSize: 18,
+  actionTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
+    textAlign: 'center',
   },
-  demoDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 18,
+  actionDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 16,
   },
-  emptyStateContainer: {
-    alignItems: "center",
-    gap: 8,
-    paddingTop: 100,
-  },
-  headerButtonContainer: {
-    padding: 6, // Just enough padding around the 24px icon
+  headerButton: {
+    padding: 8,
   },
 });
