@@ -42,7 +42,21 @@
     "notFound": "Patient not found",
     "confirmDeleteMessage": "Are you sure you want to delete {{name}}?",
     "deleteSuccess": "Patient deleted successfully",
-    "deleteError": "Failed to delete patient"
+    "deleteError": "Failed to delete patient",
+    "editPatient": "Edit Patient",
+    "updateSuccess": "Patient updated successfully",
+    "updateError": "Failed to update patient",
+    "nameRequired": "Name is required",
+    "basicInfo": "Basic Information",
+    "namePlaceholder": "Enter patient's full name",
+    "emailPlaceholder": "Enter email address",
+    "phonePlaceholder": "Enter phone number",
+    "addressPlaceholder": "Enter full address",
+    "emergencyContactPlaceholder": "Enter emergency contact name",
+    "emergencyPhonePlaceholder": "Enter emergency contact phone",
+    "medicalHistoryPlaceholder": "Enter medical history details",
+    "allergiesPlaceholder": "Enter known allergies",
+    "insuranceInfoPlaceholder": "Enter insurance information"
   },
   "procedures": {
     "title": "Procedures",
@@ -71,7 +85,13 @@
     "notFound": "Procedure not found",
     "confirmDeleteMessage": "Are you sure you want to delete {{name}}?",
     "deleteSuccess": "Procedure deleted successfully",
-    "deleteError": "Failed to delete procedure"
+    "deleteError": "Failed to delete procedure",
+    "editProcedure": "Edit Procedure",
+    "updateSuccess": "Procedure updated successfully",
+    "updateError": "Failed to update procedure",
+    "nameRequired": "Name is required",
+    "priceRequired": "Valid price is required",
+    "durationRequired": "Valid duration is required"
   },
   "appointments": {
     "title": "Appointments",
@@ -102,7 +122,16 @@
     "notFound": "Appointment not found",
     "confirmDeleteMessage": "Are you sure you want to delete this appointment?",
     "deleteSuccess": "Appointment deleted successfully",
-    "deleteError": "Failed to delete appointment"
+    "deleteError": "Failed to delete appointment",
+    "editAppointment": "Edit Appointment",
+    "updateSuccess": "Appointment updated successfully",
+    "updateError": "Failed to update appointment",
+    "patientRequired": "Patient is required",
+    "procedureRequired": "Procedure is required",
+    "dateRequired": "Date is required",
+    "timeRequired": "Time is required",
+    "today": "Today",
+    "now": "Now"
   },
   "payments": {
     "title": "Payments",
