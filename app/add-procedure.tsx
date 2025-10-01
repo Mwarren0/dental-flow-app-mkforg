@@ -12,7 +12,6 @@ export default function AddProcedureScreen() {
   const { addProcedure } = useProcedures();
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
     description: '',
     category: 'preventive',
     duration: '',
@@ -27,26 +26,27 @@ export default function AddProcedureScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.code || !formData.description || !formData.price) {
+    if (!formData.name || !formData.description || !formData.price) {
       Alert.alert(t('common.error'), t('forms.fillRequired'));
       return;
     }
 
     try {
       await addProcedure({
-        id: Date.now().toString(),
-        ...formData,
+        name: formData.name,
+        description: formData.description,
         duration: parseInt(formData.duration) || 30,
         price: parseFloat(formData.price) || 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        category: formData.category,
       });
       
-      Alert.alert(t('common.success'), t('forms.saveSuccess'), [
-        { text: t('common.ok'), onPress: () => router.back() }
-      ]);
+      Alert.alert(
+        t('common.success'), 
+        '✅ Procedure saved to database successfully!',
+        [{ text: t('common.ok'), onPress: () => router.back() }]
+      );
     } catch (error) {
-      Alert.alert(t('common.error'), t('forms.saveError'));
+      Alert.alert(t('common.error'), '❌ Failed to save procedure to database. Please try again.');
       console.log('Error adding procedure:', error);
     }
   };
@@ -75,17 +75,7 @@ export default function AddProcedureScreen() {
             />
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('procedures.code')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.code}
-              onChangeText={(value) => handleInputChange('code', value)}
-              placeholder={t('procedures.code')}
-              placeholderTextColor={colors.textSecondary}
-              autoCapitalize="characters"
-            />
-          </View>
+
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>{t('procedures.description')} *</Text>

@@ -39,17 +39,25 @@ export default function AddPatientScreen() {
 
     try {
       await addPatient({
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        dateOfBirth: formData.dateOfBirth,
+        address: formData.address,
+        emergencyContact: formData.emergencyContact,
+        emergencyPhone: '', // We don't have this field in the form yet
+        medicalHistory: formData.medicalHistory,
+        allergies: formData.allergies,
+        insuranceInfo: formData.insurance,
       });
       
-      Alert.alert(t('common.success'), t('forms.saveSuccess'), [
-        { text: t('common.ok'), onPress: () => router.back() }
-      ]);
+      Alert.alert(
+        t('common.success'), 
+        '✅ Patient saved to database successfully!',
+        [{ text: t('common.ok'), onPress: () => router.back() }]
+      );
     } catch (error) {
-      Alert.alert(t('common.error'), t('forms.saveError'));
+      Alert.alert(t('common.error'), '❌ Failed to save patient to database. Please try again.');
       console.log('Error adding patient:', error);
     }
   };

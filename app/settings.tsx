@@ -1,15 +1,52 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/app/integrations/supabase/client';
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
+  const [dbStats, setDbStats] = useState<{
+    patients: number;
+    procedures: number;
+    appointments: number;
+    isConnected: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    fetchDatabaseStats();
+  }, []);
+
+  const fetchDatabaseStats = async () => {
+    try {
+      const [patientsResult, proceduresResult, appointmentsResult] = await Promise.all([
+        supabase.from('patients').select('id', { count: 'exact', head: true }),
+        supabase.from('procedures').select('id', { count: 'exact', head: true }),
+        supabase.from('appointments').select('id', { count: 'exact', head: true })
+      ]);
+
+      setDbStats({
+        patients: patientsResult.count || 0,
+        procedures: proceduresResult.count || 0,
+        appointments: appointmentsResult.count || 0,
+        isConnected: true
+      });
+      console.log('Database stats fetched successfully');
+    } catch (error) {
+      console.error('Error fetching database stats:', error);
+      setDbStats({
+        patients: 0,
+        procedures: 0,
+        appointments: 0,
+        isConnected: false
+      });
+    }
+  };
 
   const handleLanguageChange = async (languageCode: string) => {
     if (languageCode !== currentLanguage) {
@@ -68,6 +105,48 @@ export default function SettingsScreen() {
                   )}
                 </Pressable>
               ))}
+            </View>
+          </View>
+
+          {/* Database Status Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Database Status</Text>
+            <View style={styles.sectionContent}>
+              <View style={styles.settingItem}>
+                <Text style={styles.settingLabel}>Connection Status</Text>
+                <View style={styles.statusContainer}>
+                  <IconSymbol 
+                    name={dbStats?.isConnected ? "checkmark.circle.fill" : "xmark.circle.fill"} 
+                    color={dbStats?.isConnected ? colors.success : colors.error} 
+                    size={16} 
+                  />
+                  <Text style={[styles.statusText, { 
+                    color: dbStats?.isConnected ? colors.success : colors.error 
+                  }]}>
+                    {dbStats?.isConnected ? 'Connected' : 'Disconnected'}
+                  </Text>
+                </View>
+              </View>
+              {dbStats && (
+                <>
+                  <View style={styles.settingItem}>
+                    <Text style={styles.settingLabel}>Patients</Text>
+                    <Text style={styles.settingValue}>{dbStats.patients}</Text>
+                  </View>
+                  <View style={styles.settingItem}>
+                    <Text style={styles.settingLabel}>Procedures</Text>
+                    <Text style={styles.settingValue}>{dbStats.procedures}</Text>
+                  </View>
+                  <View style={styles.settingItem}>
+                    <Text style={styles.settingLabel}>Appointments</Text>
+                    <Text style={styles.settingValue}>{dbStats.appointments}</Text>
+                  </View>
+                </>
+              )}
+              <Pressable style={styles.settingItem} onPress={fetchDatabaseStats}>
+                <Text style={[styles.settingLabel, { color: colors.primary }]}>Refresh Status</Text>
+                <IconSymbol name="arrow.clockwise" color={colors.primary} size={16} />
+              </Pressable>
             </View>
           </View>
 
@@ -167,5 +246,14 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: 8,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

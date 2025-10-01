@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -7,10 +7,35 @@ import { StatCard } from '@/components/StatCard';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useDashboardStats } from '@/hooks/useData';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/app/integrations/supabase/client';
 
 export default function DashboardScreen() {
   const { t } = useTranslation();
   const { stats, loading } = useDashboardStats();
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionChecked, setConnectionChecked] = useState(false);
+
+  useEffect(() => {
+    checkConnection();
+  }, []);
+
+  const checkConnection = async () => {
+    try {
+      const { data, error } = await supabase.from('patients').select('count', { count: 'exact', head: true });
+      if (!error) {
+        setIsConnected(true);
+        console.log('✅ Database connected successfully!');
+      } else {
+        setIsConnected(false);
+        console.log('❌ Database connection failed:', error);
+      }
+    } catch (error) {
+      setIsConnected(false);
+      console.log('❌ Database connection error:', error);
+    } finally {
+      setConnectionChecked(true);
+    }
+  };
 
   const quickActions = [
     {
@@ -78,6 +103,20 @@ export default function DashboardScreen() {
             <Text style={styles.welcomeSubtitle}>
               {t('dashboard.overview')}
             </Text>
+            
+            {/* Connection Status */}
+            {connectionChecked && (
+              <View style={[styles.connectionStatus, isConnected ? styles.connected : styles.disconnected]}>
+                <IconSymbol 
+                  name={isConnected ? "checkmark.circle.fill" : "xmark.circle.fill"} 
+                  color={isConnected ? colors.success : colors.error} 
+                  size={16} 
+                />
+                <Text style={[styles.connectionText, { color: isConnected ? colors.success : colors.error }]}>
+                  {isConnected ? '✅ Database Connected - All data saves automatically!' : '❌ Database Disconnected - Using offline mode'}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Stats Cards */}
@@ -85,30 +124,30 @@ export default function DashboardScreen() {
             <Text style={styles.sectionTitle}>{t('dashboard.todaysOverview')}</Text>
             <View style={styles.statsGrid}>
               <StatCard
-                title={t('dashboard.todaysAppointments')}
-                value={stats?.todayAppointments || 0}
-                icon="calendar"
-                color={colors.primary}
-              />
-              <StatCard
                 title={t('dashboard.totalPatients')}
                 value={stats?.totalPatients || 0}
                 icon="person.2"
+                color={colors.primary}
+              />
+              <StatCard
+                title={t('dashboard.totalProcedures')}
+                value={stats?.totalProcedures || 0}
+                icon="medical.thermometer"
                 color={colors.secondary}
               />
             </View>
             <View style={styles.statsGrid}>
               <StatCard
-                title={t('dashboard.weeklyRevenue')}
-                value={`$${stats?.weeklyRevenue || 0}`}
-                icon="dollarsign.circle"
-                color={colors.success}
+                title="Total Appointments"
+                value={stats?.totalAppointments || 0}
+                icon="calendar"
+                color={colors.accent}
               />
               <StatCard
-                title={t('dashboard.pendingPayments')}
-                value={stats?.pendingPayments || 0}
-                icon="exclamationmark.triangle"
-                color={colors.warning}
+                title="Total Revenue"
+                value={`$${stats?.totalRevenue || 0}`}
+                icon="dollarsign.circle"
+                color={colors.success}
               />
             </View>
           </View>
@@ -206,5 +245,28 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: 8,
+  },
+  connectionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  connected: {
+    backgroundColor: `${colors.success}15`,
+    borderWidth: 1,
+    borderColor: `${colors.success}30`,
+  },
+  disconnected: {
+    backgroundColor: `${colors.error}15`,
+    borderWidth: 1,
+    borderColor: `${colors.error}30`,
+  },
+  connectionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
   },
 });
