@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Alert, Pressable } from 'react-native';
-import { Stack, router } from 'expo-router';
-import { Button } from '@/components/button';
+import React, { useState } from 'react';
 import { IconSymbol } from '@/components/IconSymbol';
+import { Stack, router } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAppointments, usePatients, useProcedures } from '@/hooks/useData';
+import { Button } from '@/components/button';
+import { useTranslation } from 'react-i18next';
 
 export default function AddAppointmentScreen() {
+  const { t } = useTranslation();
   const { addAppointment } = useAppointments();
   const { patients } = usePatients();
   const { procedures } = useProcedures();
@@ -17,6 +19,8 @@ export default function AddAppointmentScreen() {
     procedureId: '',
     date: '',
     time: '',
+    duration: '60',
+    status: 'scheduled',
     notes: '',
   });
 
@@ -27,31 +31,32 @@ export default function AddAppointmentScreen() {
   const selectedProcedure = procedures.find(p => p.id === formData.procedureId);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleSubmit = () => {
-    // Basic validation
+  const handleSubmit = async () => {
     if (!formData.patientId || !formData.procedureId || !formData.date || !formData.time) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert(t('common.error'), t('forms.fillRequired'));
       return;
     }
 
     try {
-      addAppointment({
-        patientId: formData.patientId,
-        procedureId: formData.procedureId,
-        date: formData.date,
-        time: formData.time,
-        status: 'scheduled',
-        notes: formData.notes,
-        totalAmount: selectedProcedure?.price || 0,
+      await addAppointment({
+        id: Date.now().toString(),
+        ...formData,
+        duration: parseInt(formData.duration) || 60,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
-      Alert.alert('Success', 'Appointment scheduled successfully!', [
-        { text: 'OK', onPress: () => router.back() }
+      
+      Alert.alert(t('common.success'), t('forms.saveSuccess'), [
+        { text: t('common.ok'), onPress: () => router.back() }
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to schedule appointment. Please try again.');
+      Alert.alert(t('common.error'), t('forms.saveError'));
       console.log('Error adding appointment:', error);
     }
   };
@@ -60,33 +65,26 @@ export default function AddAppointmentScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Schedule Appointment',
+          title: t('appointments.addAppointment'),
           headerStyle: { backgroundColor: colors.backgroundAlt },
           headerTitleStyle: { color: colors.text, fontWeight: '600' },
         }}
       />
       <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Appointment Details</Text>
+          <Text style={styles.sectionTitle}>{t('appointments.appointmentDetails')}</Text>
           
           {/* Patient Selection */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Patient *</Text>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('appointments.patient')} *</Text>
             <Pressable
-              style={[styles.picker, !selectedPatient && styles.pickerEmpty]}
+              style={styles.picker}
               onPress={() => setShowPatientPicker(!showPatientPicker)}
             >
-              <Text style={[styles.pickerText, !selectedPatient && styles.pickerPlaceholder]}>
-                {selectedPatient 
-                  ? `${selectedPatient.firstName} ${selectedPatient.lastName}`
-                  : 'Select a patient'
-                }
+              <Text style={[styles.pickerText, !selectedPatient && styles.placeholderText]}>
+                {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : t('common.select')}
               </Text>
-              <IconSymbol 
-                name={showPatientPicker ? "chevron.up" : "chevron.down"} 
-                color={colors.textSecondary} 
-                size={16} 
-              />
+              <IconSymbol name="chevron.down" color={colors.textSecondary} size={16} />
             </Pressable>
             
             {showPatientPicker && (
@@ -103,7 +101,6 @@ export default function AddAppointmentScreen() {
                     <Text style={styles.pickerOptionText}>
                       {patient.firstName} {patient.lastName}
                     </Text>
-                    <Text style={styles.pickerOptionSubtext}>{patient.phone}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -111,23 +108,16 @@ export default function AddAppointmentScreen() {
           </View>
 
           {/* Procedure Selection */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Procedure *</Text>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('appointments.procedure')} *</Text>
             <Pressable
-              style={[styles.picker, !selectedProcedure && styles.pickerEmpty]}
+              style={styles.picker}
               onPress={() => setShowProcedurePicker(!showProcedurePicker)}
             >
-              <Text style={[styles.pickerText, !selectedProcedure && styles.pickerPlaceholder]}>
-                {selectedProcedure 
-                  ? selectedProcedure.name
-                  : 'Select a procedure'
-                }
+              <Text style={[styles.pickerText, !selectedProcedure && styles.placeholderText]}>
+                {selectedProcedure ? selectedProcedure.name : t('common.select')}
               </Text>
-              <IconSymbol 
-                name={showProcedurePicker ? "chevron.up" : "chevron.down"} 
-                color={colors.textSecondary} 
-                size={16} 
-              />
+              <IconSymbol name="chevron.down" color={colors.textSecondary} size={16} />
             </Pressable>
             
             {showProcedurePicker && (
@@ -138,92 +128,95 @@ export default function AddAppointmentScreen() {
                     style={styles.pickerOption}
                     onPress={() => {
                       handleInputChange('procedureId', procedure.id);
+                      handleInputChange('duration', procedure.duration.toString());
                       setShowProcedurePicker(false);
                     }}
                   >
                     <Text style={styles.pickerOptionText}>{procedure.name}</Text>
-                    <Text style={styles.pickerOptionSubtext}>
-                      ${procedure.price} • {procedure.duration}min
-                    </Text>
+                    <Text style={styles.pickerOptionSubtext}>${procedure.price}</Text>
                   </Pressable>
                 ))}
               </View>
             )}
           </View>
 
-          {/* Date and Time */}
-          <View style={styles.row}>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Date *</Text>
-              <TextInput
-                style={[commonStyles.input, styles.input]}
-                value={formData.date}
-                onChangeText={(value) => handleInputChange('date', value)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Time *</Text>
-              <TextInput
-                style={[commonStyles.input, styles.input]}
-                value={formData.time}
-                onChangeText={(value) => handleInputChange('time', value)}
-                placeholder="HH:MM"
-                placeholderTextColor={colors.textSecondary}
-              />
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('appointments.date')} *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.date}
+              onChangeText={(value) => handleInputChange('date', value)}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textSecondary}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('appointments.time')} *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.time}
+              onChangeText={(value) => handleInputChange('time', value)}
+              placeholder="HH:MM"
+              placeholderTextColor={colors.textSecondary}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('appointments.duration')} (minutes)</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.duration}
+              onChangeText={(value) => handleInputChange('duration', value)}
+              placeholder="60"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('appointments.status')}</Text>
+            <View style={styles.statusContainer}>
+              {['scheduled', 'confirmed', 'completed', 'cancelled'].map((status) => (
+                <Button
+                  key={status}
+                  variant={formData.status === status ? 'primary' : 'secondary'}
+                  onPress={() => handleInputChange('status', status)}
+                  style={styles.statusButton}
+                >
+                  {t(`appointments.${status}`)}
+                </Button>
+              ))}
             </View>
           </View>
 
-          {/* Notes */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Notes</Text>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('appointments.notes')}</Text>
             <TextInput
-              style={[commonStyles.input, styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea]}
               value={formData.notes}
               onChangeText={(value) => handleInputChange('notes', value)}
-              placeholder="Enter appointment notes"
+              placeholder={t('appointments.notes')}
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
             />
           </View>
 
-          {/* Summary */}
-          {selectedProcedure && (
-            <View style={[commonStyles.card, styles.summary]}>
-              <Text style={styles.summaryTitle}>Appointment Summary</Text>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Procedure:</Text>
-                <Text style={styles.summaryValue}>{selectedProcedure.name}</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Duration:</Text>
-                <Text style={styles.summaryValue}>{selectedProcedure.duration} minutes</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Cost:</Text>
-                <Text style={[styles.summaryValue, styles.summaryPrice]}>
-                  ${selectedProcedure.price.toFixed(2)}
-                </Text>
-              </View>
-            </View>
-          )}
-
           <View style={styles.buttonContainer}>
             <Button
-              variant="outline"
+              variant="secondary"
               onPress={() => router.back()}
               style={styles.button}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="primary"
               onPress={handleSubmit}
               style={styles.button}
             >
-              Schedule Appointment
+              {t('common.save')}
             </Button>
           </View>
         </View>
@@ -235,38 +228,35 @@ export default function AddAppointmentScreen() {
 const styles = StyleSheet.create({
   content: {
     padding: 20,
-    paddingBottom: 40,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 16,
-    marginTop: 8,
+    marginBottom: 24,
   },
-  inputGroup: {
+  formGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
     color: colors.text,
     marginBottom: 8,
   },
   input: {
-    marginBottom: 0,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   textArea: {
-    height: 100,
+    minHeight: 80,
     textAlignVertical: 'top',
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  halfInput: {
-    flex: 1,
   },
   picker: {
     flexDirection: 'row',
@@ -274,78 +264,55 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: colors.backgroundAlt,
-  },
-  pickerEmpty: {
-    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.background,
   },
   pickerText: {
     fontSize: 16,
     color: colors.text,
-    flex: 1,
   },
-  pickerPlaceholder: {
+  placeholderText: {
     color: colors.textSecondary,
   },
   pickerOptions: {
     marginTop: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
-    backgroundColor: colors.backgroundAlt,
+    borderRadius: 12,
+    backgroundColor: colors.background,
     maxHeight: 200,
   },
   pickerOption: {
-    padding: 12,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   pickerOptionText: {
     fontSize: 16,
     color: colors.text,
-    fontWeight: '500',
+    marginBottom: 2,
   },
   pickerOptionSubtext: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginTop: 2,
   },
-  summary: {
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  summaryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  summaryRow: {
+  statusContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  summaryLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  summaryValue: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  summaryPrice: {
-    color: colors.success,
-    fontSize: 16,
-    fontWeight: '600',
+  statusButton: {
+    flex: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
     marginTop: 32,
+    marginBottom: 40,
   },
   button: {
     flex: 1,

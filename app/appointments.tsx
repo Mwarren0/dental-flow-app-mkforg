@@ -7,14 +7,21 @@ import { AppointmentCard } from '@/components/AppointmentCard';
 import { Button } from '@/components/button';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAppointments, usePatients, useProcedures } from '@/hooks/useData';
+import { useTranslation } from 'react-i18next';
 
 export default function AppointmentsScreen() {
+  const { t } = useTranslation();
   const { appointments, loading: appointmentsLoading } = useAppointments();
   const { patients } = usePatients();
   const { procedures } = useProcedures();
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  const statuses = ['all', 'scheduled', 'completed', 'cancelled'];
+  const statuses = [
+    { key: 'all', label: t('common.all') },
+    { key: 'scheduled', label: t('appointments.scheduled') },
+    { key: 'completed', label: t('appointments.completed') },
+    { key: 'cancelled', label: t('appointments.cancelled') },
+  ];
 
   const filteredAppointments = appointments.filter(appointment => 
     selectedStatus === 'all' || appointment.status === selectedStatus
@@ -35,7 +42,7 @@ export default function AppointmentsScreen() {
   if (appointmentsLoading) {
     return (
       <View style={[commonStyles.container, commonStyles.centerContent]}>
-        <Text style={commonStyles.text}>Loading appointments...</Text>
+        <Text style={commonStyles.text}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -44,7 +51,7 @@ export default function AppointmentsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Appointments',
+          title: t('appointments.title'),
           headerRight: renderHeaderRight,
           headerStyle: { backgroundColor: colors.backgroundAlt },
           headerTitleStyle: { color: colors.text, fontWeight: '600' },
@@ -60,18 +67,18 @@ export default function AppointmentsScreen() {
           >
             {statuses.map((status) => (
               <Pressable
-                key={status}
+                key={status.key}
                 style={[
                   styles.filterButton,
-                  selectedStatus === status && styles.filterButtonActive
+                  selectedStatus === status.key && styles.filterButtonActive
                 ]}
-                onPress={() => setSelectedStatus(status)}
+                onPress={() => setSelectedStatus(status.key)}
               >
                 <Text style={[
                   styles.filterButtonText,
-                  selectedStatus === status && styles.filterButtonTextActive
+                  selectedStatus === status.key && styles.filterButtonTextActive
                 ]}>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {status.label}
                 </Text>
               </Pressable>
             ))}
@@ -84,12 +91,15 @@ export default function AppointmentsScreen() {
             <View style={styles.emptyState}>
               <IconSymbol name="calendar" color={colors.textSecondary} size={48} />
               <Text style={styles.emptyTitle}>
-                {selectedStatus !== 'all' ? `No ${selectedStatus} appointments` : 'No appointments yet'}
+                {selectedStatus !== 'all' 
+                  ? t('appointments.noAppointmentsFound', { status: statuses.find(s => s.key === selectedStatus)?.label.toLowerCase() })
+                  : t('appointments.noAppointments')
+                }
               </Text>
               <Text style={styles.emptySubtitle}>
                 {selectedStatus !== 'all'
-                  ? 'Try selecting a different status filter'
-                  : 'Schedule your first appointment to get started'
+                  ? t('appointments.tryDifferentFilter')
+                  : t('appointments.scheduleFirst')
                 }
               </Text>
               {selectedStatus === 'all' && (
@@ -98,14 +108,14 @@ export default function AppointmentsScreen() {
                   onPress={() => router.push('/add-appointment')}
                   style={styles.addButton}
                 >
-                  Schedule First Appointment
+                  {t('appointments.scheduleFirstButton')}
                 </Button>
               )}
             </View>
           ) : (
             <View style={styles.appointmentsList}>
               <Text style={styles.resultsCount}>
-                {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''}
+                {filteredAppointments.length} {filteredAppointments.length === 1 ? t('appointments.appointment') : t('appointments.appointments_plural')}
               </Text>
               {filteredAppointments.map((appointment) => (
                 <AppointmentCard

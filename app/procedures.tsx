@@ -7,13 +7,21 @@ import { ProcedureCard } from '@/components/ProcedureCard';
 import { Button } from '@/components/button';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useProcedures } from '@/hooks/useData';
+import { useTranslation } from 'react-i18next';
 
 export default function ProceduresScreen() {
+  const { t } = useTranslation();
   const { procedures, loading } = useProcedures();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const categories = ['all', 'preventive', 'restorative', 'endodontic', 'cosmetic'];
+  const categories = [
+    { key: 'all', label: t('common.all') },
+    { key: 'preventive', label: t('procedures.preventive') },
+    { key: 'restorative', label: t('procedures.restorative') },
+    { key: 'endodontic', label: t('procedures.endodontic') },
+    { key: 'cosmetic', label: t('procedures.cosmetic') },
+  ];
 
   const filteredProcedures = procedures.filter(procedure => {
     const matchesSearch = procedure.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -38,7 +46,7 @@ export default function ProceduresScreen() {
   if (loading) {
     return (
       <View style={[commonStyles.container, commonStyles.centerContent]}>
-        <Text style={commonStyles.text}>Loading procedures...</Text>
+        <Text style={commonStyles.text}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -47,7 +55,7 @@ export default function ProceduresScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Procedures',
+          title: t('procedures.title'),
           headerRight: renderHeaderRight,
           headerStyle: { backgroundColor: colors.backgroundAlt },
           headerTitleStyle: { color: colors.text, fontWeight: '600' },
@@ -60,7 +68,7 @@ export default function ProceduresScreen() {
             <IconSymbol name="magnifyingglass" color={colors.textSecondary} size={20} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search procedures..."
+              placeholder={t('procedures.searchPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -81,18 +89,18 @@ export default function ProceduresScreen() {
           >
             {categories.map((category) => (
               <Pressable
-                key={category}
+                key={category.key}
                 style={[
                   styles.categoryButton,
-                  selectedCategory === category && styles.categoryButtonActive
+                  selectedCategory === category.key && styles.categoryButtonActive
                 ]}
-                onPress={() => setSelectedCategory(category)}
+                onPress={() => setSelectedCategory(category.key)}
               >
                 <Text style={[
                   styles.categoryButtonText,
-                  selectedCategory === category && styles.categoryButtonTextActive
+                  selectedCategory === category.key && styles.categoryButtonTextActive
                 ]}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                  {category.label}
                 </Text>
               </Pressable>
             ))}
@@ -105,12 +113,12 @@ export default function ProceduresScreen() {
             <View style={styles.emptyState}>
               <IconSymbol name="medical.thermometer" color={colors.textSecondary} size={48} />
               <Text style={styles.emptyTitle}>
-                {searchQuery || selectedCategory !== 'all' ? 'No procedures found' : 'No procedures yet'}
+                {searchQuery || selectedCategory !== 'all' ? t('procedures.noProceduresFound') : t('procedures.noProcedures')}
               </Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery || selectedCategory !== 'all'
-                  ? 'Try adjusting your search or filter'
-                  : 'Add your first procedure to get started'
+                  ? t('procedures.tryAdjustingFilter')
+                  : t('procedures.addFirstProcedure')
                 }
               </Text>
               {!searchQuery && selectedCategory === 'all' && (
@@ -119,14 +127,14 @@ export default function ProceduresScreen() {
                   onPress={() => router.push('/add-procedure')}
                   style={styles.addButton}
                 >
-                  Add First Procedure
+                  {t('procedures.addFirstProcedureButton')}
                 </Button>
               )}
             </View>
           ) : (
             <View style={styles.proceduresList}>
               <Text style={styles.resultsCount}>
-                {filteredProcedures.length} procedure{filteredProcedures.length !== 1 ? 's' : ''}
+                {filteredProcedures.length} {filteredProcedures.length === 1 ? t('procedures.procedure') : t('procedures.procedures_plural')}
               </Text>
               {filteredProcedures.map((procedure) => (
                 <ProcedureCard

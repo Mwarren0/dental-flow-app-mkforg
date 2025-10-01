@@ -7,8 +7,10 @@ import { PatientCard } from '@/components/PatientCard';
 import { Button } from '@/components/button';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { usePatients } from '@/hooks/useData';
+import { useTranslation } from 'react-i18next';
 
 export default function PatientsScreen() {
+  const { t } = useTranslation();
   const { patients, loading } = usePatients();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -30,7 +32,7 @@ export default function PatientsScreen() {
   if (loading) {
     return (
       <View style={[commonStyles.container, commonStyles.centerContent]}>
-        <Text style={commonStyles.text}>Loading patients...</Text>
+        <Text style={commonStyles.text}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -39,7 +41,7 @@ export default function PatientsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Patients',
+          title: t('patients.title'),
           headerRight: renderHeaderRight,
           headerStyle: { backgroundColor: colors.backgroundAlt },
           headerTitleStyle: { color: colors.text, fontWeight: '600' },
@@ -52,7 +54,7 @@ export default function PatientsScreen() {
             <IconSymbol name="magnifyingglass" color={colors.textSecondary} size={20} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search patients..."
+              placeholder={t('patients.searchPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -71,12 +73,12 @@ export default function PatientsScreen() {
             <View style={styles.emptyState}>
               <IconSymbol name="person.2" color={colors.textSecondary} size={48} />
               <Text style={styles.emptyTitle}>
-                {searchQuery ? 'No patients found' : 'No patients yet'}
+                {searchQuery ? t('patients.noPatientsFound') : t('patients.noPatients')}
               </Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery 
-                  ? 'Try adjusting your search terms'
-                  : 'Add your first patient to get started'
+                  ? t('patients.tryAdjustingSearch')
+                  : t('patients.addFirstPatient')
                 }
               </Text>
               {!searchQuery && (
@@ -85,14 +87,14 @@ export default function PatientsScreen() {
                   onPress={() => router.push('/add-patient')}
                   style={styles.addButton}
                 >
-                  Add First Patient
+                  {t('patients.addFirstPatientButton')}
                 </Button>
               )}
             </View>
           ) : (
             <View style={styles.patientsList}>
               <Text style={styles.resultsCount}>
-                {filteredPatients.length} patient{filteredPatients.length !== 1 ? 's' : ''}
+                {filteredPatients.length} {filteredPatients.length === 1 ? t('patients.patient') : t('patients.patients_plural')}
               </Text>
               {filteredPatients.map((patient) => (
                 <PatientCard

@@ -6,38 +6,40 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { StatCard } from '@/components/StatCard';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useDashboardStats } from '@/hooks/useData';
+import { useTranslation } from 'react-i18next';
 
 export default function DashboardScreen() {
+  const { t } = useTranslation();
   const { stats, loading } = useDashboardStats();
 
   const quickActions = [
     {
-      title: 'Patients',
+      title: t('navigation.patients'),
       icon: 'person.2',
       color: colors.primary,
       route: '/patients',
-      description: 'Manage patient records',
+      description: t('dashboard.managePatients'),
     },
     {
-      title: 'Appointments',
+      title: t('navigation.appointments'),
       icon: 'calendar',
       color: colors.secondary,
       route: '/appointments',
-      description: 'Schedule & view appointments',
+      description: t('dashboard.scheduleAppointments'),
     },
     {
-      title: 'Procedures',
+      title: t('navigation.procedures'),
       icon: 'medical.thermometer',
       color: colors.accent,
       route: '/procedures',
-      description: 'Manage dental procedures',
+      description: t('dashboard.manageProcedures'),
     },
     {
-      title: 'Payments',
+      title: t('navigation.payments'),
       icon: 'creditcard',
       color: colors.success,
       route: '/payments',
-      description: 'Track payments & billing',
+      description: t('dashboard.trackPayments'),
     },
   ];
 
@@ -53,7 +55,7 @@ export default function DashboardScreen() {
   if (loading) {
     return (
       <View style={[commonStyles.container, commonStyles.centerContent]}>
-        <Text style={commonStyles.text}>Loading dashboard...</Text>
+        <Text style={commonStyles.text}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -62,7 +64,7 @@ export default function DashboardScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Dental Care Dashboard',
+          title: t('dashboard.title'),
           headerRight: renderHeaderRight,
           headerStyle: { backgroundColor: colors.backgroundAlt },
           headerTitleStyle: { color: colors.text, fontWeight: '600' },
@@ -72,24 +74,24 @@ export default function DashboardScreen() {
         <View style={styles.content}>
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome back, Doctor!</Text>
+            <Text style={styles.welcomeTitle}>{t('dashboard.welcome')}</Text>
             <Text style={styles.welcomeSubtitle}>
-              Here&apos;s your practice overview for today
+              {t('dashboard.overview')}
             </Text>
           </View>
 
           {/* Stats Cards */}
           <View style={styles.statsSection}>
-            <Text style={styles.sectionTitle}>Today&apos;s Overview</Text>
+            <Text style={styles.sectionTitle}>{t('dashboard.todaysOverview')}</Text>
             <View style={styles.statsGrid}>
               <StatCard
-                title="Today&apos;s Appointments"
+                title={t('dashboard.todaysAppointments')}
                 value={stats?.todayAppointments || 0}
                 icon="calendar"
                 color={colors.primary}
               />
               <StatCard
-                title="Total Patients"
+                title={t('dashboard.totalPatients')}
                 value={stats?.totalPatients || 0}
                 icon="person.2"
                 color={colors.secondary}
@@ -97,13 +99,13 @@ export default function DashboardScreen() {
             </View>
             <View style={styles.statsGrid}>
               <StatCard
-                title="Weekly Revenue"
+                title={t('dashboard.weeklyRevenue')}
                 value={`$${stats?.weeklyRevenue || 0}`}
                 icon="dollarsign.circle"
                 color={colors.success}
               />
               <StatCard
-                title="Pending Payments"
+                title={t('dashboard.pendingPayments')}
                 value={stats?.pendingPayments || 0}
                 icon="exclamationmark.triangle"
                 color={colors.warning}
@@ -113,7 +115,7 @@ export default function DashboardScreen() {
 
           {/* Quick Actions */}
           <View style={styles.actionsSection}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <Text style={styles.sectionTitle}>{t('dashboard.quickActions')}</Text>
             <View style={styles.actionsGrid}>
               {quickActions.map((action) => (
                 <Pressable

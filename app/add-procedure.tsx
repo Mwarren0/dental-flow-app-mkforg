@@ -1,62 +1,52 @@
 
-import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Alert } from 'react-native';
+import React, { useState } from 'react';
 import { Stack, router } from 'expo-router';
-import { Button } from '@/components/button';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useProcedures } from '@/hooks/useData';
+import { Button } from '@/components/button';
+import { useTranslation } from 'react-i18next';
 
 export default function AddProcedureScreen() {
+  const { t } = useTranslation();
   const { addProcedure } = useProcedures();
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    price: '',
-    duration: '',
-    category: '',
     code: '',
+    description: '',
+    category: 'preventive',
+    duration: '',
+    price: '',
   });
 
-  const categories = ['Preventive', 'Restorative', 'Endodontic', 'Cosmetic', 'Surgical', 'Orthodontic'];
-
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleSubmit = () => {
-    // Basic validation
-    if (!formData.name || !formData.price || !formData.duration || !formData.category) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-
-    const price = parseFloat(formData.price);
-    const duration = parseInt(formData.duration);
-
-    if (isNaN(price) || price <= 0) {
-      Alert.alert('Error', 'Please enter a valid price');
-      return;
-    }
-
-    if (isNaN(duration) || duration <= 0) {
-      Alert.alert('Error', 'Please enter a valid duration in minutes');
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.code || !formData.description || !formData.price) {
+      Alert.alert(t('common.error'), t('forms.fillRequired'));
       return;
     }
 
     try {
-      addProcedure({
-        name: formData.name,
-        description: formData.description,
-        price,
-        duration,
-        category: formData.category,
-        code: formData.code,
+      await addProcedure({
+        id: Date.now().toString(),
+        ...formData,
+        duration: parseInt(formData.duration) || 30,
+        price: parseFloat(formData.price) || 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
-      Alert.alert('Success', 'Procedure added successfully!', [
-        { text: 'OK', onPress: () => router.back() }
+      
+      Alert.alert(t('common.success'), t('forms.saveSuccess'), [
+        { text: t('common.ok'), onPress: () => router.back() }
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to add procedure. Please try again.');
+      Alert.alert(t('common.error'), t('forms.saveError'));
       console.log('Error adding procedure:', error);
     }
   };
@@ -65,111 +55,105 @@ export default function AddProcedureScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Add New Procedure',
+          title: t('procedures.addProcedure'),
           headerStyle: { backgroundColor: colors.backgroundAlt },
           headerTitleStyle: { color: colors.text, fontWeight: '600' },
         }}
       />
       <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Procedure Details</Text>
+          <Text style={styles.sectionTitle}>{t('procedures.procedureDetails')}</Text>
           
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Procedure Name *</Text>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('procedures.name')} *</Text>
             <TextInput
-              style={[commonStyles.input, styles.input]}
+              style={styles.input}
               value={formData.name}
               onChangeText={(value) => handleInputChange('name', value)}
-              placeholder="Enter procedure name"
+              placeholder={t('procedures.name')}
               placeholderTextColor={colors.textSecondary}
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Description</Text>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('procedures.code')} *</Text>
             <TextInput
-              style={[commonStyles.input, styles.input, styles.textArea]}
+              style={styles.input}
+              value={formData.code}
+              onChangeText={(value) => handleInputChange('code', value)}
+              placeholder={t('procedures.code')}
+              placeholderTextColor={colors.textSecondary}
+              autoCapitalize="characters"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('procedures.description')} *</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
               value={formData.description}
               onChangeText={(value) => handleInputChange('description', value)}
-              placeholder="Enter procedure description"
+              placeholder={t('procedures.description')}
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
             />
           </View>
 
-          <View style={styles.row}>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Price ($) *</Text>
-              <TextInput
-                style={[commonStyles.input, styles.input]}
-                value={formData.price}
-                onChangeText={(value) => handleInputChange('price', value)}
-                placeholder="0.00"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="decimal-pad"
-              />
-            </View>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Duration (minutes) *</Text>
-              <TextInput
-                style={[commonStyles.input, styles.input]}
-                value={formData.duration}
-                onChangeText={(value) => handleInputChange('duration', value)}
-                placeholder="60"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="number-pad"
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Category *</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              style={styles.categoryContainer}
-            >
-              {categories.map((category) => (
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('procedures.category')}</Text>
+            <View style={styles.categoryContainer}>
+              {['preventive', 'restorative', 'endodontic', 'cosmetic'].map((category) => (
                 <Button
                   key={category}
-                  variant={formData.category === category ? 'primary' : 'outline'}
-                  size="sm"
+                  variant={formData.category === category ? 'primary' : 'secondary'}
                   onPress={() => handleInputChange('category', category)}
                   style={styles.categoryButton}
                 >
-                  {category}
+                  {t(`procedures.${category}`)}
                 </Button>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Procedure Code</Text>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('procedures.duration')}</Text>
             <TextInput
-              style={[commonStyles.input, styles.input]}
-              value={formData.code}
-              onChangeText={(value) => handleInputChange('code', value)}
-              placeholder="Enter procedure code (e.g., D1110)"
+              style={styles.input}
+              value={formData.duration}
+              onChangeText={(value) => handleInputChange('duration', value)}
+              placeholder="30"
               placeholderTextColor={colors.textSecondary}
-              autoCapitalize="characters"
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('procedures.price')} *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.price}
+              onChangeText={(value) => handleInputChange('price', value)}
+              placeholder="0.00"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="decimal-pad"
             />
           </View>
 
           <View style={styles.buttonContainer}>
             <Button
-              variant="outline"
+              variant="secondary"
               onPress={() => router.back()}
               style={styles.button}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="primary"
               onPress={handleSubmit}
               style={styles.button}
             >
-              Add Procedure
+              {t('common.save')}
             </Button>
           </View>
         </View>
@@ -181,50 +165,51 @@ export default function AddProcedureScreen() {
 const styles = StyleSheet.create({
   content: {
     padding: 20,
-    paddingBottom: 40,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 16,
-    marginTop: 8,
+    marginBottom: 24,
   },
-  inputGroup: {
+  formGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
     color: colors.text,
     marginBottom: 8,
   },
   input: {
-    marginBottom: 0,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   textArea: {
-    height: 100,
+    minHeight: 80,
     textAlignVertical: 'top',
   },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  halfInput: {
-    flex: 1,
-  },
   categoryContainer: {
-    marginTop: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   categoryButton: {
-    marginRight: 8,
-    minWidth: 100,
+    flex: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
     marginTop: 32,
+    marginBottom: 40,
   },
   button: {
     flex: 1,
