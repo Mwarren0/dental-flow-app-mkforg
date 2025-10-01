@@ -67,8 +67,8 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     <Pressable style={[commonStyles.card, styles.container]} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.timeSection}>
-          <Text style={styles.date}>{dateStr}</Text>
-          <Text style={styles.time}>{timeStr}</Text>
+          <Text style={styles.date} numberOfLines={1}>{dateStr}</Text>
+          <Text style={styles.time} numberOfLines={1}>{timeStr}</Text>
         </View>
         
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(appointment.status) }]}>
@@ -77,30 +77,42 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             color="white" 
             size={12} 
           />
-          <Text style={styles.statusText}>{appointment.status.toUpperCase()}</Text>
+          <Text style={styles.statusText} numberOfLines={1}>
+            {appointment.status.toUpperCase()}
+          </Text>
         </View>
       </View>
       
       {patient && (
-        <View style={styles.patientSection}>
-          <IconSymbol name="person.circle" color={colors.primary} size={16} />
-          <Text style={styles.patientName}>
-            {patient.name}
-          </Text>
+        <View style={styles.infoSection}>
+          <View style={styles.infoRow}>
+            <IconSymbol name="person.circle" color={colors.primary} size={16} />
+            <Text style={styles.infoText} numberOfLines={1}>
+              {patient.name}
+            </Text>
+          </View>
         </View>
       )}
       
       {procedure && (
-        <View style={styles.procedureSection}>
-          <IconSymbol name="medical.thermometer" color={colors.secondary} size={16} />
-          <Text style={styles.procedureName}>{procedure.name}</Text>
-          <Text style={styles.procedurePrice}>{formatPrice(procedure.price)}</Text>
+        <View style={styles.infoSection}>
+          <View style={styles.infoRow}>
+            <IconSymbol name="medical.thermometer" color={colors.secondary} size={16} />
+            <Text style={styles.infoText} numberOfLines={1}>
+              {procedure.name}
+            </Text>
+            <Text style={styles.priceText}>
+              {formatPrice(procedure.price)}
+            </Text>
+          </View>
         </View>
       )}
       
       {appointment.notes && (
         <View style={styles.notesSection}>
-          <Text style={styles.notes}>{appointment.notes}</Text>
+          <Text style={styles.notes} numberOfLines={3}>
+            {appointment.notes}
+          </Text>
         </View>
       )}
       
@@ -124,70 +136,70 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
+    marginBottom: 16,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   timeSection: {
     flex: 1,
+    paddingRight: 12,
   },
   date: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: 4,
+    lineHeight: 22,
   },
   time: {
     fontSize: 14,
     color: colors.textSecondary,
+    lineHeight: 18,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+    minWidth: 80,
+    justifyContent: 'center',
   },
   statusText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '700',
     color: 'white',
+    letterSpacing: 0.5,
   },
-  patientSection: {
+  infoSection: {
+    marginBottom: 12,
+  },
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: 12,
   },
-  patientName: {
+  infoText: {
+    flex: 1,
     fontSize: 16,
     fontWeight: '500',
     color: colors.text,
+    lineHeight: 20,
   },
-  procedureSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  procedureName: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  procedurePrice: {
+  priceText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.success,
   },
   notesSection: {
-    marginBottom: 12,
-    paddingTop: 8,
+    marginBottom: 16,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
@@ -195,19 +207,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     fontStyle: 'italic',
+    lineHeight: 20,
   },
   actions: {
     flexDirection: 'row',
     gap: 12,
     justifyContent: 'flex-end',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
   },
   editButton: {
     backgroundColor: `${colors.primary}20`,
@@ -216,7 +232,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${colors.error}20`,
   },
   actionText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
 });

@@ -1,47 +1,66 @@
+
 {
   "expo": {
-    "name": "Natively",
-    "slug": "Natively",
+    "name": "Dental Care Manager",
+    "slug": "dental-care-manager",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/natively-dark.png",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "icon": "./assets/images/final_quest_240x240.png",
+    "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/images/natively-dark.png",
+      "image": "./assets/images/final_quest_240x240.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#F8FAFB"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Natively",
+      "bundleIdentifier": "com.dentalcare.manager",
+      "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "NSCameraUsageDescription": "This app uses the camera to take photos for patient records.",
+        "NSPhotoLibraryUsageDescription": "This app accesses the photo library to select images for patient records."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/natively-dark.png",
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/images/final_quest_240x240.png",
+        "backgroundColor": "#F8FAFB"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Natively"
+      "package": "com.dentalcare.manager",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/images/final_quest_240x240.png",
       "bundler": "metro"
     },
     "plugins": [
-      "expo-font",
       "expo-router",
-      "expo-web-browser"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with patients.",
+          "cameraPermission": "The app accesses your camera to let you take photos for patient records."
+        }
+      ]
     ],
-    "scheme": "natively",
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "router": {}
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
     }
   }
 }

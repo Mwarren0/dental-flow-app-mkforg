@@ -18,12 +18,22 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, s
     <View style={[commonStyles.card, styles.container]}>
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: color }]}>
-          <IconSymbol name={icon as any} color="white" size={20} />
+          <IconSymbol name={icon as any} color="white" size={22} />
         </View>
-        <Text style={styles.title}>{title}</Text>
       </View>
-      <Text style={styles.value}>{value}</Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+      <View style={styles.content}>
+        <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+          {value}
+        </Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
     </View>
   );
 
@@ -41,39 +51,46 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, s
 const styles = StyleSheet.create({
   pressable: {
     flex: 1,
+    minWidth: 160,
   },
   container: {
     flex: 1,
-    minHeight: 100,
+    minHeight: 120,
     margin: 0,
+    padding: 20,
+    justifyContent: 'space-between',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  value: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: 4,
+    lineHeight: 32,
   },
   title: {
     fontSize: 14,
     fontWeight: '500',
     color: colors.textSecondary,
-    flex: 1,
-  },
-  value: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
+    lineHeight: 18,
   },
   subtitle: {
     fontSize: 12,
     color: colors.textSecondary,
+    marginTop: 4,
   },
 });

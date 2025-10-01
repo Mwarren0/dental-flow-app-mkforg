@@ -40,11 +40,19 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </Text>
         </View>
         <View style={styles.patientInfo}>
-          <Text style={styles.name}>
+          <Text style={styles.name} numberOfLines={1}>
             {patient.name}
           </Text>
-          <Text style={styles.contact}>{patient.phone}</Text>
-          <Text style={styles.contact}>{patient.email}</Text>
+          {patient.phone && (
+            <Text style={styles.contact} numberOfLines={1}>
+              {patient.phone}
+            </Text>
+          )}
+          {patient.email && (
+            <Text style={styles.contact} numberOfLines={1}>
+              {patient.email}
+            </Text>
+          )}
         </View>
         <View style={styles.actions}>
           {onEdit && (
@@ -64,13 +72,17 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         {patient.dateOfBirth && (
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Date of Birth:</Text>
-            <Text style={styles.detailValue}>{formatDate(patient.dateOfBirth)}</Text>
+            <Text style={styles.detailValue} numberOfLines={1}>
+              {formatDate(patient.dateOfBirth)}
+            </Text>
           </View>
         )}
         {patient.allergies && patient.allergies !== 'None known' && (
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Allergies:</Text>
-            <Text style={[styles.detailValue, styles.allergyText]}>{patient.allergies}</Text>
+            <Text style={[styles.detailValue, styles.allergyText]} numberOfLines={2}>
+              {patient.allergies}
+            </Text>
           </View>
         )}
       </View>
@@ -80,67 +92,77 @@ export const PatientCard: React.FC<PatientCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
+    marginBottom: 16,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   avatarText: {
     color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
   },
   patientInfo: {
     flex: 1,
+    paddingRight: 12,
   },
   name: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 6,
+    lineHeight: 22,
   },
   contact: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginBottom: 2,
+    marginBottom: 3,
+    lineHeight: 18,
   },
   actions: {
     flexDirection: 'row',
     gap: 8,
   },
   actionButton: {
-    padding: 8,
-    borderRadius: 6,
+    padding: 10,
+    borderRadius: 8,
     backgroundColor: colors.background,
   },
   details: {
-    gap: 8,
+    gap: 12,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   detailItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   detailLabel: {
     fontSize: 14,
     color: colors.textSecondary,
     fontWeight: '500',
+    flex: 1,
   },
   detailValue: {
     fontSize: 14,
     color: colors.text,
     fontWeight: '400',
+    flex: 2,
+    textAlign: 'right',
   },
   allergyText: {
     color: colors.warning,
