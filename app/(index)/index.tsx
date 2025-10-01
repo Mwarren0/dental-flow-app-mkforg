@@ -189,6 +189,8 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   connectionStatus: {
     flexDirection: 'row',

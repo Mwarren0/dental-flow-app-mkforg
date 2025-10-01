@@ -1,3 +1,4 @@
+
 // This file is a fallback for using MaterialIcons on Android and web.
 
 import React from "react";
@@ -45,8 +46,10 @@ const MAPPING = {
 
   // Actions & Controls
   "plus": "add",
+  "plus.circle": "add-circle",
   "minus": "remove",
   "xmark": "close",
+  "xmark.circle.fill": "cancel",
   "checkmark": "check",
   "checkmark.circle.fill": "check-circle",
   "checkmark.circle": "check-circle-outline",
@@ -83,6 +86,7 @@ const MAPPING = {
 
   // System & Settings
   "gear": "settings",
+  "gearshape": "settings",
   "gearshape.fill": "settings",
   "slider.horizontal.3": "tune",
   "info.circle.fill": "info",
@@ -110,6 +114,7 @@ const MAPPING = {
   "battery.25": "battery-2-bar",
   "lock.fill": "lock",
   "lock.open.fill": "lock-open",
+  "wrench": "build",
 
   // Shopping & Commerce
   "cart.fill": "shopping-cart",
@@ -117,6 +122,7 @@ const MAPPING = {
   "creditcard.fill": "credit-card",
   "creditcard": "credit-card",
   "dollarsign.circle.fill": "monetization-on",
+  "dollarsign.circle": "monetization-on",
   "bag.fill": "shopping-bag",
   "bag": "shopping-bag",
 
@@ -131,6 +137,7 @@ const MAPPING = {
   "clock.fill": "access-time",
   "clock": "access-time",
   "calendar": "event",
+  "calendar.badge.plus": "event-available",
   "timer": "timer",
 
   // User & Profile
@@ -140,6 +147,10 @@ const MAPPING = {
   "person.2": "group",
   "person.crop.circle.fill": "account-circle",
   "person.crop.circle": "account-circle",
+  "person.badge.plus": "person-add",
+
+  // Medical & Health
+  "medical.thermometer": "local-hospital",
 
   // Sharing & Export
   "square.and.arrow.up": "share",

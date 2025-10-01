@@ -6,68 +6,61 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { supabase } from '@/app/integrations/supabase/client';
 
 export default function TestDataScreen() {
-  const [patients, setPatients] = useState<any[]>([]);
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [procedures, setProcedures] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<{
+    patients: any[];
+    procedures: any[];
+    appointments: any[];
+    error?: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     testDataFetching();
   }, []);
 
   const testDataFetching = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
+      console.log('Starting database connection test...');
       
-      console.log('Testing data fetching...');
-      
-      // Test patients
-      const { data: patientsData, error: patientsError } = await supabase
-        .from('patients')
-        .select('*');
-      
-      if (patientsError) {
-        console.error('Patients error:', patientsError);
-        setError(`Patients error: ${patientsError.message}`);
-        return;
+      const [patientsResult, proceduresResult, appointmentsResult] = await Promise.all([
+        supabase.from('patients').select('*').limit(5),
+        supabase.from('procedures').select('*').limit(5),
+        supabase.from('appointments').select('*').limit(5)
+      ]);
+
+      console.log('Patients result:', patientsResult);
+      console.log('Procedures result:', proceduresResult);
+      console.log('Appointments result:', appointmentsResult);
+
+      if (patientsResult.error || proceduresResult.error || appointmentsResult.error) {
+        const errors = [
+          patientsResult.error?.message,
+          proceduresResult.error?.message,
+          appointmentsResult.error?.message
+        ].filter(Boolean);
+        
+        setTestResults({
+          patients: [],
+          procedures: [],
+          appointments: [],
+          error: `Database errors: ${errors.join(', ')}`
+        });
+      } else {
+        setTestResults({
+          patients: patientsResult.data || [],
+          procedures: proceduresResult.data || [],
+          appointments: appointmentsResult.data || []
+        });
       }
-      
-      console.log('Patients data:', patientsData);
-      setPatients(patientsData || []);
-      
-      // Test appointments
-      const { data: appointmentsData, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('*');
-      
-      if (appointmentsError) {
-        console.error('Appointments error:', appointmentsError);
-        setError(`Appointments error: ${appointmentsError.message}`);
-        return;
-      }
-      
-      console.log('Appointments data:', appointmentsData);
-      setAppointments(appointmentsData || []);
-      
-      // Test procedures
-      const { data: proceduresData, error: proceduresError } = await supabase
-        .from('procedures')
-        .select('*');
-      
-      if (proceduresError) {
-        console.error('Procedures error:', proceduresError);
-        setError(`Procedures error: ${proceduresError.message}`);
-        return;
-      }
-      
-      console.log('Procedures data:', proceduresData);
-      setProcedures(proceduresData || []);
-      
-    } catch (err) {
-      console.error('Test error:', err);
-      setError(`Test error: ${err}`);
+    } catch (error) {
+      console.error('Test data fetching error:', error);
+      setTestResults({
+        patients: [],
+        procedures: [],
+        appointments: [],
+        error: `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
     } finally {
       setLoading(false);
     }
@@ -77,49 +70,75 @@ export default function TestDataScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Test Data',
+          title: 'Database Test',
           headerStyle: { backgroundColor: colors.backgroundAlt },
           headerTitleStyle: { color: colors.text, fontWeight: '600' },
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={styles.headerButton}
+            >
+              <Text style={styles.backButton}>← Back</Text>
+            </Pressable>
+          ),
         }}
       />
       <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Pressable style={styles.refreshButton} onPress={testDataFetching}>
-            <Text style={styles.refreshText}>Refresh Data</Text>
-          </Pressable>
-          
-          {loading && <Text style={styles.status}>Loading...</Text>}
-          {error && <Text style={styles.error}>{error}</Text>}
-          
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Patients ({patients.length})</Text>
-            {patients.map((patient, index) => (
-              <View key={index} style={styles.item}>
-                <Text style={styles.itemText}>{patient.name} - {patient.email}</Text>
+            <Text style={styles.sectionTitle}>Database Connection Test</Text>
+            
+            <Pressable 
+              style={[styles.testButton, loading && styles.testButtonDisabled]} 
+              onPress={testDataFetching}
+              disabled={loading}
+            >
+              <Text style={styles.testButtonText}>
+                {loading ? 'Testing...' : 'Run Test'}
+              </Text>
+            </Pressable>
+
+            {testResults && (
+              <View style={styles.results}>
+                {testResults.error ? (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorTitle}>❌ Connection Failed</Text>
+                    <Text style={styles.errorText}>{testResults.error}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.successContainer}>
+                    <Text style={styles.successTitle}>✅ Connection Successful</Text>
+                    
+                    <View style={styles.dataSection}>
+                      <Text style={styles.dataTitle}>Patients ({testResults.patients.length})</Text>
+                      {testResults.patients.slice(0, 3).map((patient, index) => (
+                        <Text key={index} style={styles.dataItem}>
+                          • {patient.name} ({patient.email || 'No email'})
+                        </Text>
+                      ))}
+                    </View>
+
+                    <View style={styles.dataSection}>
+                      <Text style={styles.dataTitle}>Procedures ({testResults.procedures.length})</Text>
+                      {testResults.procedures.slice(0, 3).map((procedure, index) => (
+                        <Text key={index} style={styles.dataItem}>
+                          • {procedure.name} (${procedure.price || '0'})
+                        </Text>
+                      ))}
+                    </View>
+
+                    <View style={styles.dataSection}>
+                      <Text style={styles.dataTitle}>Appointments ({testResults.appointments.length})</Text>
+                      {testResults.appointments.slice(0, 3).map((appointment, index) => (
+                        <Text key={index} style={styles.dataItem}>
+                          • {new Date(appointment.date_time).toLocaleDateString()} - {appointment.status}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
               </View>
-            ))}
-          </View>
-          
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Appointments ({appointments.length})</Text>
-            {appointments.map((appointment, index) => (
-              <View key={index} style={styles.item}>
-                <Text style={styles.itemText}>
-                  {appointment.date_time} - {appointment.status}
-                </Text>
-              </View>
-            ))}
-          </View>
-          
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Procedures ({procedures.length})</Text>
-            {procedures.map((procedure, index) => (
-              <View key={index} style={styles.item}>
-                <Text style={styles.itemText}>
-                  {procedure.name} - ${procedure.price}
-                </Text>
-              </View>
-            ))}
+            )}
           </View>
         </View>
       </ScrollView>
@@ -131,48 +150,86 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-  refreshButton: {
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  testButton: {
     backgroundColor: colors.primary,
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
   },
-  refreshText: {
+  testButtonDisabled: {
+    backgroundColor: colors.textSecondary,
+  },
+  testButtonText: {
     color: 'white',
+    fontSize: 16,
     fontWeight: '600',
   },
-  status: {
+  headerButton: {
+    padding: 8,
+  },
+  backButton: {
+    color: colors.primary,
     fontSize: 16,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 20,
+    fontWeight: '500',
   },
-  error: {
-    fontSize: 16,
-    color: colors.error,
-    textAlign: 'center',
-    marginBottom: 20,
+  results: {
+    marginTop: 20,
   },
-  section: {
-    marginBottom: 24,
+  errorContainer: {
+    backgroundColor: colors.error + '20',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.error,
   },
-  sectionTitle: {
+  errorTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  item: {
-    backgroundColor: colors.backgroundAlt,
-    padding: 12,
-    borderRadius: 8,
+    color: colors.error,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  itemText: {
+  errorText: {
     fontSize: 14,
+    color: colors.error,
+    lineHeight: 20,
+  },
+  successContainer: {
+    backgroundColor: colors.success + '20',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.success,
+  },
+  successTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.success,
+    marginBottom: 16,
+  },
+  dataSection: {
+    marginBottom: 16,
+  },
+  dataTitle: {
+    fontSize: 16,
+    fontWeight: '600',
     color: colors.text,
+    marginBottom: 8,
+  },
+  dataItem: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 4,
+    paddingLeft: 8,
   },
 });

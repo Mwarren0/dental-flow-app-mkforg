@@ -9,9 +9,9 @@ export interface DebugConfig {
 
 export const debugConfig: DebugConfig = {
   enabled: __DEV__, // Only enable in development
-  showConnectionStatus: true,
-  showDataCounts: __DEV__,
-  showTestDataButton: __DEV__,
+  showConnectionStatus: false, // Hide connection status from dashboard
+  showDataCounts: false, // Hide debug data counts from dashboard
+  showTestDataButton: false, // Hide test data button from dashboard
   logLevel: __DEV__ ? 'debug' : 'error',
 };
 

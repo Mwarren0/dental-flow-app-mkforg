@@ -11,7 +11,7 @@ export interface Environment {
 
 const developmentConfig: Environment = {
   supabaseUrl: 'https://hlcnivhpjhrfymwhtrwt.supabase.co',
-  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsY25pdmhwamhyZnltd2h0cnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU5MzQ0NzQsImV4cCI6MjA1MTUxMDQ3NH0.Hs3gGJBJqGJQOKGJQOKGJQOKGJQOKGJQOKGJQOKGJQO',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsY25pdmhwamhyZnltd2h0cnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTIyMzQsImV4cCI6MjA3NDg2ODIzNH0.0bAEPsBAXaEQkjDfd98PNBzUcwJwwqOORcLYdw6bQBk',
   environment: 'development',
   apiUrl: 'https://hlcnivhpjhrfymwhtrwt.supabase.co',
   enableDebug: true,
@@ -19,7 +19,7 @@ const developmentConfig: Environment = {
 
 const productionConfig: Environment = {
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://hlcnivhpjhrfymwhtrwt.supabase.co',
-  supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'your-production-anon-key',
+  supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsY25pdmhwamhyZnltd2h0cnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTIyMzQsImV4cCI6MjA3NDg2ODIzNH0.0bAEPsBAXaEQkjDfd98PNBzUcwJwwqOORcLYdw6bQBk',
   environment: 'production',
   apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://hlcnivhpjhrfymwhtrwt.supabase.co',
   enableDebug: false,
