@@ -61,6 +61,16 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     return `$${price.toFixed(2)}`;
   };
 
+  const handleEdit = (e: any) => {
+    e.stopPropagation();
+    onEdit?.();
+  };
+
+  const handleCancel = (e: any) => {
+    e.stopPropagation();
+    onCancel?.();
+  };
+
   const { dateStr, timeStr } = formatDateTime(appointment.dateTime);
 
   return (
@@ -118,13 +128,13 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       
       <View style={styles.actions}>
         {onEdit && (appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
-          <Pressable style={[styles.actionButton, styles.editButton]} onPress={onEdit}>
+          <Pressable style={[styles.actionButton, styles.editButton]} onPress={handleEdit}>
             <IconSymbol name="pencil" color={colors.primary} size={16} />
             <Text style={[styles.actionText, { color: colors.primary }]}>Edit</Text>
           </Pressable>
         )}
         {onCancel && (appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
-          <Pressable style={[styles.actionButton, styles.cancelButton]} onPress={onCancel}>
+          <Pressable style={[styles.actionButton, styles.cancelButton]} onPress={handleCancel}>
             <IconSymbol name="xmark" color={colors.error} size={16} />
             <Text style={[styles.actionText, { color: colors.error }]}>Cancel</Text>
           </Pressable>

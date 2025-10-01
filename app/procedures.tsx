@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { ProcedureCard } from '@/components/ProcedureCard';
@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function ProceduresScreen() {
   const { t } = useTranslation();
-  const { procedures, loading } = useProcedures();
+  const { procedures, loading, deleteProcedure } = useProcedures();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -26,13 +26,36 @@ export default function ProceduresScreen() {
   const filteredProcedures = procedures.filter(procedure => {
     const matchesSearch = procedure.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          procedure.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         procedure.code.toLowerCase().includes(searchQuery.toLowerCase());
+                         (procedure.code && procedure.code.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesCategory = selectedCategory === 'all' || 
                            procedure.category.toLowerCase() === selectedCategory;
     
     return matchesSearch && matchesCategory;
   });
+
+  const handleDeleteProcedure = (procedureId: string, procedureName: string) => {
+    Alert.alert(
+      t('common.confirmDelete'),
+      t('procedures.confirmDeleteMessage', { name: procedureName }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteProcedure(procedureId);
+              Alert.alert(t('common.success'), t('procedures.deleteSuccess'));
+            } catch (error) {
+              Alert.alert(t('common.error'), t('procedures.deleteError'));
+              console.log('Error deleting procedure:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const renderHeaderRight = () => (
     <Pressable
@@ -142,7 +165,7 @@ export default function ProceduresScreen() {
                   procedure={procedure}
                   onPress={() => router.push(`/procedure/${procedure.id}`)}
                   onEdit={() => router.push(`/edit-procedure/${procedure.id}`)}
-                  onDelete={() => console.log('Delete procedure:', procedure.id)}
+                  onDelete={() => handleDeleteProcedure(procedure.id, procedure.name)}
                 />
               ))}
             </View>

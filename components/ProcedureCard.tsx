@@ -41,6 +41,16 @@ export const ProcedureCard: React.FC<ProcedureCardProps> = ({
     return `${mins}m`;
   };
 
+  const handleEdit = (e: any) => {
+    e.stopPropagation();
+    onEdit?.();
+  };
+
+  const handleDelete = (e: any) => {
+    e.stopPropagation();
+    onDelete?.();
+  };
+
   return (
     <Pressable style={[commonStyles.card, styles.container]} onPress={onPress}>
       <View style={styles.header}>
@@ -52,12 +62,12 @@ export const ProcedureCard: React.FC<ProcedureCardProps> = ({
         </View>
         <View style={styles.actions}>
           {onEdit && (
-            <Pressable style={styles.actionButton} onPress={onEdit}>
+            <Pressable style={styles.actionButton} onPress={handleEdit}>
               <IconSymbol name="pencil" color={colors.primary} size={18} />
             </Pressable>
           )}
           {onDelete && (
-            <Pressable style={styles.actionButton} onPress={onDelete}>
+            <Pressable style={styles.actionButton} onPress={handleDelete}>
               <IconSymbol name="trash" color={colors.error} size={18} />
             </Pressable>
           )}
@@ -83,13 +93,15 @@ export const ProcedureCard: React.FC<ProcedureCardProps> = ({
           <Text style={styles.detailValue}>{formatDuration(procedure.duration)}</Text>
         </View>
         
-        <View style={styles.detailItem}>
-          <View style={styles.detailRow}>
-            <IconSymbol name="number" color={colors.textSecondary} size={16} />
-            <Text style={styles.detailLabel}>Code:</Text>
+        {procedure.code && (
+          <View style={styles.detailItem}>
+            <View style={styles.detailRow}>
+              <IconSymbol name="number" color={colors.textSecondary} size={16} />
+              <Text style={styles.detailLabel}>Code:</Text>
+            </View>
+            <Text style={styles.detailValue}>{procedure.code}</Text>
           </View>
-          <Text style={styles.detailValue}>{procedure.code}</Text>
-        </View>
+        )}
       </View>
     </Pressable>
   );

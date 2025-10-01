@@ -1,11 +1,12 @@
 
-import { View, Text, StyleSheet, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Alert, Pressable } from 'react-native';
 import React, { useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useProcedures } from '@/hooks/useData';
 import { Button } from '@/components/button';
 import { useTranslation } from 'react-i18next';
+import { IconSymbol } from '@/components/IconSymbol';
 
 export default function AddProcedureScreen() {
   const { t } = useTranslation();
@@ -16,13 +17,27 @@ export default function AddProcedureScreen() {
     category: 'preventive',
     duration: '',
     price: '',
+    code: '',
   });
+
+  const categories = [
+    { key: 'preventive', label: t('procedures.preventive'), icon: 'shield.checkered', color: colors.success },
+    { key: 'restorative', label: t('procedures.restorative'), icon: 'wrench.and.screwdriver', color: colors.primary },
+    { key: 'endodontic', label: t('procedures.endodontic'), icon: 'medical.thermometer', color: colors.warning },
+    { key: 'cosmetic', label: t('procedures.cosmetic'), icon: 'sparkles', color: colors.accent },
+  ];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const generateCode = () => {
+    const prefix = formData.category.substring(0, 3).toUpperCase();
+    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${prefix}-${randomNum}`;
   };
 
   const handleSubmit = async () => {
@@ -32,12 +47,15 @@ export default function AddProcedureScreen() {
     }
 
     try {
+      const procedureCode = formData.code || generateCode();
+      
       await addProcedure({
         name: formData.name,
         description: formData.description,
         duration: parseInt(formData.duration) || 30,
         price: parseFloat(formData.price) || 0,
         category: formData.category,
+        code: procedureCode,
       });
       
       Alert.alert(
@@ -70,12 +88,10 @@ export default function AddProcedureScreen() {
               style={styles.input}
               value={formData.name}
               onChangeText={(value) => handleInputChange('name', value)}
-              placeholder={t('procedures.name')}
+              placeholder={t('procedures.namePlaceholder')}
               placeholderTextColor={colors.textSecondary}
             />
           </View>
-
-
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>{t('procedures.description')} *</Text>
@@ -83,7 +99,7 @@ export default function AddProcedureScreen() {
               style={[styles.input, styles.textArea]}
               value={formData.description}
               onChangeText={(value) => handleInputChange('description', value)}
-              placeholder={t('procedures.description')}
+              placeholder={t('procedures.descriptionPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
@@ -91,43 +107,79 @@ export default function AddProcedureScreen() {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('procedures.category')}</Text>
-            <View style={styles.categoryContainer}>
-              {['preventive', 'restorative', 'endodontic', 'cosmetic'].map((category) => (
-                <Button
-                  key={category}
-                  variant={formData.category === category ? 'primary' : 'secondary'}
-                  onPress={() => handleInputChange('category', category)}
-                  style={styles.categoryButton}
+            <Text style={styles.label}>{t('procedures.category')} *</Text>
+            <View style={styles.categoryGrid}>
+              {categories.map((category) => (
+                <Pressable
+                  key={category.key}
+                  style={[
+                    styles.categoryCard,
+                    formData.category === category.key && [
+                      styles.categoryCardActive,
+                      { borderColor: category.color }
+                    ]
+                  ]}
+                  onPress={() => handleInputChange('category', category.key)}
                 >
-                  {t(`procedures.${category}`)}
-                </Button>
+                  <View style={[styles.categoryIcon, { backgroundColor: category.color }]}>
+                    <IconSymbol name={category.icon as any} color="white" size={20} />
+                  </View>
+                  <Text style={[
+                    styles.categoryText,
+                    formData.category === category.key && { color: category.color, fontWeight: '600' }
+                  ]}>
+                    {category.label}
+                  </Text>
+                </Pressable>
               ))}
             </View>
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('procedures.duration')}</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.duration}
-              onChangeText={(value) => handleInputChange('duration', value)}
-              placeholder="30"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="numeric"
-            />
+          <View style={styles.formRow}>
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>{t('procedures.duration')} (min)</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.duration}
+                onChangeText={(value) => handleInputChange('duration', value)}
+                placeholder="30"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>{t('procedures.price')} * ($)</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.price}
+                onChangeText={(value) => handleInputChange('price', value)}
+                placeholder="0.00"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="decimal-pad"
+              />
+            </View>
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('procedures.price')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.price}
-              onChangeText={(value) => handleInputChange('price', value)}
-              placeholder="0.00"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="decimal-pad"
-            />
+            <Text style={styles.label}>{t('procedures.code')}</Text>
+            <View style={styles.codeInputContainer}>
+              <TextInput
+                style={[styles.input, styles.codeInput]}
+                value={formData.code}
+                onChangeText={(value) => handleInputChange('code', value)}
+                placeholder="AUTO-GENERATED"
+                placeholderTextColor={colors.textSecondary}
+              />
+              <Pressable
+                style={styles.generateButton}
+                onPress={() => handleInputChange('code', generateCode())}
+              >
+                <IconSymbol name="arrow.clockwise" color={colors.primary} size={16} />
+                <Text style={styles.generateButtonText}>Generate</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.helpText}>Leave empty to auto-generate based on category</Text>
           </View>
 
           <View style={styles.buttonContainer}>
@@ -165,6 +217,13 @@ const styles = StyleSheet.create({
   formGroup: {
     marginBottom: 20,
   },
+  formRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfWidth: {
+    flex: 1,
+  },
   label: {
     fontSize: 16,
     fontWeight: '500',
@@ -182,18 +241,69 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   textArea: {
-    minHeight: 80,
+    minHeight: 100,
     textAlignVertical: 'top',
   },
-  categoryContainer: {
+  categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 12,
+  },
+  categoryCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: colors.backgroundAlt,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
     gap: 8,
   },
-  categoryButton: {
-    flex: 0,
-    paddingHorizontal: 16,
+  categoryCardActive: {
+    backgroundColor: colors.background,
+    borderWidth: 2,
+  },
+  categoryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  codeInputContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  codeInput: {
+    flex: 1,
+  },
+  generateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
     paddingVertical: 8,
+    backgroundColor: `${colors.primary}20`,
+    borderRadius: 8,
+  },
+  generateButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  helpText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   buttonContainer: {
     flexDirection: 'row',

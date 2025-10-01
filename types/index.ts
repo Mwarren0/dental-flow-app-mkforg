@@ -22,6 +22,7 @@ export interface Procedure {
   duration: number; // in minutes
   price: number;
   category: string;
+  code: string; // Added code field
   createdAt: string;
   updatedAt: string;
 }

@@ -31,6 +31,16 @@ export const PatientCard: React.FC<PatientCardProps> = ({
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleEdit = (e: any) => {
+    e.stopPropagation();
+    onEdit?.();
+  };
+
+  const handleDelete = (e: any) => {
+    e.stopPropagation();
+    onDelete?.();
+  };
+
   return (
     <Pressable style={[commonStyles.card, styles.container]} onPress={onPress}>
       <View style={styles.header}>
@@ -56,12 +66,12 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         </View>
         <View style={styles.actions}>
           {onEdit && (
-            <Pressable style={styles.actionButton} onPress={onEdit}>
+            <Pressable style={styles.actionButton} onPress={handleEdit}>
               <IconSymbol name="pencil" color={colors.primary} size={18} />
             </Pressable>
           )}
           {onDelete && (
-            <Pressable style={styles.actionButton} onPress={onDelete}>
+            <Pressable style={styles.actionButton} onPress={handleDelete}>
               <IconSymbol name="trash" color={colors.error} size={18} />
             </Pressable>
           )}

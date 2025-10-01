@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { AppointmentCard } from '@/components/AppointmentCard';
@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function AppointmentsScreen() {
   const { t } = useTranslation();
-  const { appointments, loading: appointmentsLoading } = useAppointments();
+  const { appointments, loading: appointmentsLoading, deleteAppointment } = useAppointments();
   const { patients } = usePatients();
   const { procedures } = useProcedures();
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -19,6 +19,7 @@ export default function AppointmentsScreen() {
   const statuses = [
     { key: 'all', label: t('common.all') },
     { key: 'scheduled', label: t('appointments.scheduled') },
+    { key: 'confirmed', label: t('appointments.confirmed') },
     { key: 'completed', label: t('appointments.completed') },
     { key: 'cancelled', label: t('appointments.cancelled') },
   ];
@@ -29,6 +30,29 @@ export default function AppointmentsScreen() {
 
   const getPatientById = (id: string) => patients.find(p => p.id === id);
   const getProcedureById = (id: string) => procedures.find(p => p.id === id);
+
+  const handleDeleteAppointment = (appointmentId: string) => {
+    Alert.alert(
+      t('common.confirmDelete'),
+      t('appointments.confirmDeleteMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAppointment(appointmentId);
+              Alert.alert(t('common.success'), t('appointments.deleteSuccess'));
+            } catch (error) {
+              Alert.alert(t('common.error'), t('appointments.deleteError'));
+              console.log('Error deleting appointment:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const renderHeaderRight = () => (
     <Pressable
@@ -125,7 +149,7 @@ export default function AppointmentsScreen() {
                   procedure={getProcedureById(appointment.procedureId)}
                   onPress={() => router.push(`/appointment/${appointment.id}`)}
                   onEdit={() => router.push(`/edit-appointment/${appointment.id}`)}
-                  onCancel={() => console.log('Cancel appointment:', appointment.id)}
+                  onCancel={() => handleDeleteAppointment(appointment.id)}
                 />
               ))}
             </View>

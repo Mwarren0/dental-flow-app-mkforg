@@ -178,6 +178,7 @@ export const useProcedures = () => {
         duration: procedure.duration || 0,
         price: parseFloat(procedure.price) || 0,
         category: procedure.category || '',
+        code: procedure.code || '',
         createdAt: procedure.created_at,
         updatedAt: procedure.updated_at,
       }));
@@ -207,6 +208,7 @@ export const useProcedures = () => {
           duration: procedure.duration || null,
           price: procedure.price || null,
           category: procedure.category || null,
+          code: procedure.code || null,
         })
         .select()
         .single();
@@ -234,6 +236,7 @@ export const useProcedures = () => {
           duration: updates.duration || null,
           price: updates.price || null,
           category: updates.category || null,
+          code: updates.code || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);

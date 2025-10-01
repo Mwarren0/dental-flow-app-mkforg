@@ -29,11 +29,36 @@ export default function AddAppointmentScreen() {
   const selectedPatient = patients.find(p => p.id === formData.patientId);
   const selectedProcedure = procedures.find(p => p.id === formData.procedureId);
 
+  const statusOptions = [
+    { key: 'scheduled', label: t('appointments.scheduled'), color: colors.primary, icon: 'calendar' },
+    { key: 'confirmed', label: t('appointments.confirmed'), color: colors.secondary, icon: 'checkmark.circle' },
+    { key: 'completed', label: t('appointments.completed'), color: colors.success, icon: 'checkmark.circle.fill' },
+    { key: 'cancelled', label: t('appointments.cancelled'), color: colors.error, icon: 'xmark.circle' },
+  ];
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toTimeString().split(' ')[0].substring(0, 5);
+  };
+
+  const setToday = () => {
+    const today = new Date();
+    handleInputChange('date', formatDate(today));
+  };
+
+  const setCurrentTime = () => {
+    const now = new Date();
+    handleInputChange('time', formatTime(now));
   };
 
   const handleSubmit = async () => {
@@ -82,13 +107,31 @@ export default function AddAppointmentScreen() {
           <View style={styles.formGroup}>
             <Text style={styles.label}>{t('appointments.patient')} *</Text>
             <Pressable
-              style={styles.picker}
+              style={[styles.picker, selectedPatient && styles.pickerSelected]}
               onPress={() => setShowPatientPicker(!showPatientPicker)}
             >
-              <Text style={[styles.pickerText, !selectedPatient && styles.placeholderText]}>
-                {selectedPatient ? selectedPatient.name : t('common.select')}
-              </Text>
-              <IconSymbol name="chevron.down" color={colors.textSecondary} size={16} />
+              <View style={styles.pickerContent}>
+                {selectedPatient ? (
+                  <View style={styles.selectedItem}>
+                    <View style={styles.selectedAvatar}>
+                      <Text style={styles.selectedAvatarText}>
+                        {selectedPatient.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.selectedInfo}>
+                      <Text style={styles.selectedName}>{selectedPatient.name}</Text>
+                      <Text style={styles.selectedDetails}>{selectedPatient.phone}</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={styles.placeholderText}>{t('appointments.selectPatient')}</Text>
+                )}
+              </View>
+              <IconSymbol 
+                name={showPatientPicker ? "chevron.up" : "chevron.down"} 
+                color={colors.textSecondary} 
+                size={16} 
+              />
             </Pressable>
             
             {showPatientPicker && (
@@ -103,12 +146,15 @@ export default function AddAppointmentScreen() {
                         setShowPatientPicker(false);
                       }}
                     >
-                      <Text style={styles.pickerOptionText}>
-                        {patient.name}
-                      </Text>
-                      <Text style={styles.pickerOptionSubtext}>
-                        {patient.phone}
-                      </Text>
+                      <View style={styles.optionAvatar}>
+                        <Text style={styles.optionAvatarText}>
+                          {patient.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={styles.optionInfo}>
+                        <Text style={styles.optionName}>{patient.name}</Text>
+                        <Text style={styles.optionDetails}>{patient.phone} • {patient.email}</Text>
+                      </View>
                     </Pressable>
                   ))}
                 </ScrollView>
@@ -120,13 +166,31 @@ export default function AddAppointmentScreen() {
           <View style={styles.formGroup}>
             <Text style={styles.label}>{t('appointments.procedure')} *</Text>
             <Pressable
-              style={styles.picker}
+              style={[styles.picker, selectedProcedure && styles.pickerSelected]}
               onPress={() => setShowProcedurePicker(!showProcedurePicker)}
             >
-              <Text style={[styles.pickerText, !selectedProcedure && styles.placeholderText]}>
-                {selectedProcedure ? selectedProcedure.name : t('common.select')}
-              </Text>
-              <IconSymbol name="chevron.down" color={colors.textSecondary} size={16} />
+              <View style={styles.pickerContent}>
+                {selectedProcedure ? (
+                  <View style={styles.selectedItem}>
+                    <View style={[styles.selectedAvatar, { backgroundColor: colors.secondary }]}>
+                      <IconSymbol name="medical.thermometer" color="white" size={16} />
+                    </View>
+                    <View style={styles.selectedInfo}>
+                      <Text style={styles.selectedName}>{selectedProcedure.name}</Text>
+                      <Text style={styles.selectedDetails}>
+                        ${selectedProcedure.price} • {selectedProcedure.duration}min
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={styles.placeholderText}>{t('appointments.selectProcedure')}</Text>
+                )}
+              </View>
+              <IconSymbol 
+                name={showProcedurePicker ? "chevron.up" : "chevron.down"} 
+                color={colors.textSecondary} 
+                size={16} 
+              />
             </Pressable>
             
             {showProcedurePicker && (
@@ -141,8 +205,15 @@ export default function AddAppointmentScreen() {
                         setShowProcedurePicker(false);
                       }}
                     >
-                      <Text style={styles.pickerOptionText}>{procedure.name}</Text>
-                      <Text style={styles.pickerOptionSubtext}>${procedure.price}</Text>
+                      <View style={[styles.optionAvatar, { backgroundColor: colors.secondary }]}>
+                        <IconSymbol name="medical.thermometer" color="white" size={16} />
+                      </View>
+                      <View style={styles.optionInfo}>
+                        <Text style={styles.optionName}>{procedure.name}</Text>
+                        <Text style={styles.optionDetails}>
+                          ${procedure.price} • {procedure.duration}min • {procedure.category}
+                        </Text>
+                      </View>
                     </Pressable>
                   ))}
                 </ScrollView>
@@ -150,51 +221,79 @@ export default function AddAppointmentScreen() {
             )}
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('appointments.date')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.date}
-              onChangeText={(value) => handleInputChange('date', value)}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.textSecondary}
-            />
+          {/* Date and Time */}
+          <View style={styles.formRow}>
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>{t('appointments.date')} *</Text>
+              <View style={styles.inputWithButton}>
+                <TextInput
+                  style={[styles.input, styles.inputFlex]}
+                  value={formData.date}
+                  onChangeText={(value) => handleInputChange('date', value)}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.textSecondary}
+                />
+                <Pressable style={styles.quickButton} onPress={setToday}>
+                  <Text style={styles.quickButtonText}>Today</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>{t('appointments.time')} *</Text>
+              <View style={styles.inputWithButton}>
+                <TextInput
+                  style={[styles.input, styles.inputFlex]}
+                  value={formData.time}
+                  onChangeText={(value) => handleInputChange('time', value)}
+                  placeholder="HH:MM"
+                  placeholderTextColor={colors.textSecondary}
+                />
+                <Pressable style={styles.quickButton} onPress={setCurrentTime}>
+                  <Text style={styles.quickButtonText}>Now</Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('appointments.time')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.time}
-              onChangeText={(value) => handleInputChange('time', value)}
-              placeholder="HH:MM (24-hour format)"
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
-
+          {/* Status Selection */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>{t('appointments.status')}</Text>
-            <View style={styles.statusContainer}>
-              {['scheduled', 'confirmed', 'completed', 'cancelled'].map((status) => (
-                <Button
-                  key={status}
-                  variant={formData.status === status ? 'primary' : 'secondary'}
-                  onPress={() => handleInputChange('status', status)}
-                  style={styles.statusButton}
+            <View style={styles.statusGrid}>
+              {statusOptions.map((status) => (
+                <Pressable
+                  key={status.key}
+                  style={[
+                    styles.statusCard,
+                    formData.status === status.key && [
+                      styles.statusCardActive,
+                      { borderColor: status.color }
+                    ]
+                  ]}
+                  onPress={() => handleInputChange('status', status.key)}
                 >
-                  {t(`appointments.${status}`)}
-                </Button>
+                  <View style={[styles.statusIcon, { backgroundColor: status.color }]}>
+                    <IconSymbol name={status.icon as any} color="white" size={16} />
+                  </View>
+                  <Text style={[
+                    styles.statusText,
+                    formData.status === status.key && { color: status.color, fontWeight: '600' }
+                  ]}>
+                    {status.label}
+                  </Text>
+                </Pressable>
               ))}
             </View>
           </View>
 
+          {/* Notes */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>{t('appointments.notes')}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.notes}
               onChangeText={(value) => handleInputChange('notes', value)}
-              placeholder={t('appointments.notes')}
+              placeholder={t('appointments.notesPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
@@ -236,6 +335,13 @@ const styles = StyleSheet.create({
   formGroup: {
     marginBottom: 20,
   },
+  formRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfWidth: {
+    flex: 1,
+  },
   label: {
     fontSize: 16,
     fontWeight: '500',
@@ -252,6 +358,25 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.background,
   },
+  inputFlex: {
+    flex: 1,
+  },
+  inputWithButton: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  quickButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: `${colors.primary}20`,
+    borderRadius: 8,
+  },
+  quickButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.primary,
+  },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
@@ -266,12 +391,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: colors.background,
+    minHeight: 48,
   },
-  pickerText: {
+  pickerSelected: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}05`,
+  },
+  pickerContent: {
+    flex: 1,
+  },
+  selectedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  selectedAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedAvatarText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  selectedInfo: {
+    flex: 1,
+  },
+  selectedName: {
     fontSize: 16,
+    fontWeight: '500',
     color: colors.text,
+    marginBottom: 2,
+  },
+  selectedDetails: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   placeholderText: {
+    fontSize: 16,
     color: colors.textSecondary,
   },
   pickerOptions: {
@@ -286,28 +447,71 @@ const styles = StyleSheet.create({
     maxHeight: 200,
   },
   pickerOption: {
-    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  pickerOptionText: {
+  optionAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  optionAvatarText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  optionInfo: {
+    flex: 1,
+  },
+  optionName: {
     fontSize: 16,
+    fontWeight: '500',
     color: colors.text,
     marginBottom: 2,
   },
-  pickerOptionSubtext: {
+  optionDetails: {
     fontSize: 14,
     color: colors.textSecondary,
   },
-  statusContainer: {
+  statusGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 12,
+  },
+  statusCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: colors.backgroundAlt,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
     gap: 8,
   },
-  statusButton: {
-    flex: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  statusCardActive: {
+    backgroundColor: colors.background,
+    borderWidth: 2,
+  },
+  statusIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.text,
+    textAlign: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',

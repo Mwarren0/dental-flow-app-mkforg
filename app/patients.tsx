@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { PatientCard } from '@/components/PatientCard';
@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function PatientsScreen() {
   const { t } = useTranslation();
-  const { patients, loading } = usePatients();
+  const { patients, loading, deletePatient } = usePatients();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredPatients = patients.filter(patient =>
@@ -19,6 +19,29 @@ export default function PatientsScreen() {
     patient.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     patient.phone.includes(searchQuery)
   );
+
+  const handleDeletePatient = (patientId: string, patientName: string) => {
+    Alert.alert(
+      t('common.confirmDelete'),
+      t('patients.confirmDeleteMessage', { name: patientName }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deletePatient(patientId);
+              Alert.alert(t('common.success'), t('patients.deleteSuccess'));
+            } catch (error) {
+              Alert.alert(t('common.error'), t('patients.deleteError'));
+              console.log('Error deleting patient:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const renderHeaderRight = () => (
     <Pressable
@@ -102,7 +125,7 @@ export default function PatientsScreen() {
                   patient={patient}
                   onPress={() => router.push(`/patient/${patient.id}`)}
                   onEdit={() => router.push(`/edit-patient/${patient.id}`)}
-                  onDelete={() => console.log('Delete patient:', patient.id)}
+                  onDelete={() => handleDeletePatient(patient.id, patient.name)}
                 />
               ))}
             </View>
