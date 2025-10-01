@@ -15,6 +15,8 @@ export const usePatients = () => {
   const fetchPatients = async () => {
     try {
       setLoading(true);
+      console.log('Fetching patients...');
+      
       const { data, error } = await supabase
         .from('patients')
         .select('*')
@@ -25,10 +27,12 @@ export const usePatients = () => {
         return;
       }
 
+      console.log('Raw patient data:', data);
+
       // Transform database data to match our Patient type
       const transformedPatients: Patient[] = data.map(patient => ({
         id: patient.id,
-        name: patient.name,
+        name: patient.name || '',
         email: patient.email || '',
         phone: patient.phone || '',
         dateOfBirth: patient.date_of_birth || '',
@@ -42,6 +46,7 @@ export const usePatients = () => {
         updatedAt: patient.updated_at,
       }));
 
+      console.log('Transformed patients:', transformedPatients);
       setPatients(transformedPatients);
     } catch (error) {
       console.error('Error in fetchPatients:', error);
@@ -56,6 +61,8 @@ export const usePatients = () => {
 
   const addPatient = async (patient: Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      console.log('Adding patient:', patient);
+      
       const { data, error } = await supabase
         .from('patients')
         .insert({
@@ -75,13 +82,14 @@ export const usePatients = () => {
 
       if (error) {
         console.error('Error adding patient:', error);
-        return;
+        throw error;
       }
 
       console.log('Patient added successfully:', data);
       await fetchPatients(); // Refresh the list
     } catch (error) {
       console.error('Error in addPatient:', error);
+      throw error;
     }
   };
 
@@ -106,13 +114,14 @@ export const usePatients = () => {
 
       if (error) {
         console.error('Error updating patient:', error);
-        return;
+        throw error;
       }
 
       console.log('Patient updated successfully:', id);
       await fetchPatients(); // Refresh the list
     } catch (error) {
       console.error('Error in updatePatient:', error);
+      throw error;
     }
   };
 
@@ -125,13 +134,14 @@ export const usePatients = () => {
 
       if (error) {
         console.error('Error deleting patient:', error);
-        return;
+        throw error;
       }
 
       console.log('Patient deleted successfully:', id);
       await fetchPatients(); // Refresh the list
     } catch (error) {
       console.error('Error in deletePatient:', error);
+      throw error;
     }
   };
 
@@ -145,6 +155,8 @@ export const useProcedures = () => {
   const fetchProcedures = async () => {
     try {
       setLoading(true);
+      console.log('Fetching procedures...');
+      
       const { data, error } = await supabase
         .from('procedures')
         .select('*')
@@ -155,18 +167,21 @@ export const useProcedures = () => {
         return;
       }
 
+      console.log('Raw procedure data:', data);
+
       // Transform database data to match our Procedure type
       const transformedProcedures: Procedure[] = data.map(procedure => ({
         id: procedure.id,
         name: procedure.name,
         description: procedure.description || '',
         duration: procedure.duration || 0,
-        price: procedure.price || 0,
+        price: parseFloat(procedure.price) || 0,
         category: procedure.category || '',
         createdAt: procedure.created_at,
         updatedAt: procedure.updated_at,
       }));
 
+      console.log('Transformed procedures:', transformedProcedures);
       setProcedures(transformedProcedures);
     } catch (error) {
       console.error('Error in fetchProcedures:', error);
@@ -181,6 +196,8 @@ export const useProcedures = () => {
 
   const addProcedure = async (procedure: Omit<Procedure, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      console.log('Adding procedure:', procedure);
+      
       const { data, error } = await supabase
         .from('procedures')
         .insert({
@@ -195,13 +212,14 @@ export const useProcedures = () => {
 
       if (error) {
         console.error('Error adding procedure:', error);
-        return;
+        throw error;
       }
 
       console.log('Procedure added successfully:', data);
       await fetchProcedures(); // Refresh the list
     } catch (error) {
       console.error('Error in addProcedure:', error);
+      throw error;
     }
   };
 
@@ -221,13 +239,14 @@ export const useProcedures = () => {
 
       if (error) {
         console.error('Error updating procedure:', error);
-        return;
+        throw error;
       }
 
       console.log('Procedure updated successfully:', id);
       await fetchProcedures(); // Refresh the list
     } catch (error) {
       console.error('Error in updateProcedure:', error);
+      throw error;
     }
   };
 
@@ -240,13 +259,14 @@ export const useProcedures = () => {
 
       if (error) {
         console.error('Error deleting procedure:', error);
-        return;
+        throw error;
       }
 
       console.log('Procedure deleted successfully:', id);
       await fetchProcedures(); // Refresh the list
     } catch (error) {
       console.error('Error in deleteProcedure:', error);
+      throw error;
     }
   };
 
@@ -260,6 +280,8 @@ export const useAppointments = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
+      console.log('Fetching appointments...');
+      
       const { data, error } = await supabase
         .from('appointments')
         .select('*')
@@ -269,6 +291,8 @@ export const useAppointments = () => {
         console.error('Error fetching appointments:', error);
         return;
       }
+
+      console.log('Raw appointment data:', data);
 
       // Transform database data to match our Appointment type
       const transformedAppointments: Appointment[] = data.map(appointment => ({
@@ -282,6 +306,7 @@ export const useAppointments = () => {
         updatedAt: appointment.updated_at,
       }));
 
+      console.log('Transformed appointments:', transformedAppointments);
       setAppointments(transformedAppointments);
     } catch (error) {
       console.error('Error in fetchAppointments:', error);
@@ -296,6 +321,8 @@ export const useAppointments = () => {
 
   const addAppointment = async (appointment: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      console.log('Adding appointment:', appointment);
+      
       const { data, error } = await supabase
         .from('appointments')
         .insert({
@@ -310,13 +337,14 @@ export const useAppointments = () => {
 
       if (error) {
         console.error('Error adding appointment:', error);
-        return;
+        throw error;
       }
 
       console.log('Appointment added successfully:', data);
       await fetchAppointments(); // Refresh the list
     } catch (error) {
       console.error('Error in addAppointment:', error);
+      throw error;
     }
   };
 
@@ -336,13 +364,14 @@ export const useAppointments = () => {
 
       if (error) {
         console.error('Error updating appointment:', error);
-        return;
+        throw error;
       }
 
       console.log('Appointment updated successfully:', id);
       await fetchAppointments(); // Refresh the list
     } catch (error) {
       console.error('Error in updateAppointment:', error);
+      throw error;
     }
   };
 
@@ -355,13 +384,14 @@ export const useAppointments = () => {
 
       if (error) {
         console.error('Error deleting appointment:', error);
-        return;
+        throw error;
       }
 
       console.log('Appointment deleted successfully:', id);
       await fetchAppointments(); // Refresh the list
     } catch (error) {
       console.error('Error in deleteAppointment:', error);
+      throw error;
     }
   };
 
@@ -375,6 +405,7 @@ export const useDashboardStats = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
+      console.log('Fetching dashboard stats...');
 
       // Fetch counts from each table
       const [patientsResult, proceduresResult, appointmentsResult, paymentsResult] = await Promise.all([
@@ -387,7 +418,7 @@ export const useDashboardStats = () => {
       // Calculate total revenue from payments
       let totalRevenue = 0;
       if (paymentsResult.data) {
-        totalRevenue = paymentsResult.data.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        totalRevenue = paymentsResult.data.reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
       }
 
       const dashboardStats: DashboardStats = {
@@ -399,8 +430,8 @@ export const useDashboardStats = () => {
         pendingAppointments: appointmentsResult.count || 0, // For now, showing all as pending
       };
 
-      setStats(dashboardStats);
       console.log('Dashboard stats fetched:', dashboardStats);
+      setStats(dashboardStats);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       // Fallback to mock data if there's an error
@@ -415,4 +446,13 @@ export const useDashboardStats = () => {
   }, []);
 
   return { stats, loading };
+};
+
+// Keep the existing treatments and payments hooks for now
+export const useTreatments = () => {
+  return { treatments: mockTreatments, loading: false };
+};
+
+export const usePayments = () => {
+  return { payments: mockPayments, loading: false };
 };

@@ -1,16 +1,16 @@
 
 export interface Patient {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string; // Changed from firstName/lastName to single name field
   email: string;
   phone: string;
   dateOfBirth: string;
   address: string;
-  medicalHistory: string;
-  allergies: string;
   emergencyContact: string;
   emergencyPhone: string;
+  medicalHistory: string;
+  allergies: string;
+  insuranceInfo: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,10 +19,9 @@ export interface Procedure {
   id: string;
   name: string;
   description: string;
-  price: number;
   duration: number; // in minutes
+  price: number;
   category: string;
-  code: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,11 +30,9 @@ export interface Appointment {
   id: string;
   patientId: string;
   procedureId: string;
-  date: string;
-  time: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
+  dateTime: string; // Changed from separate date/time to single dateTime
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
   notes: string;
-  totalAmount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,17 +55,18 @@ export interface Payment {
   appointmentId: string;
   patientId: string;
   amount: number;
-  method: 'cash' | 'card' | 'insurance' | 'bank_transfer';
-  status: 'pending' | 'completed' | 'failed';
-  date: string;
+  method: 'cash' | 'card' | 'transfer' | 'insurance';
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  notes: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface DashboardStats {
-  todayAppointments: number;
-  weeklyRevenue: number;
   totalPatients: number;
-  completedTreatments: number;
-  pendingPayments: number;
+  totalProcedures: number;
+  totalAppointments: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  pendingAppointments: number;
 }

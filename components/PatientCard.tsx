@@ -18,11 +18,16 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   onEdit, 
   onDelete 
 }) => {
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -31,12 +36,12 @@ export const PatientCard: React.FC<PatientCardProps> = ({
       <View style={styles.header}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
-            {getInitials(patient.firstName, patient.lastName)}
+            {getInitials(patient.name)}
           </Text>
         </View>
         <View style={styles.patientInfo}>
           <Text style={styles.name}>
-            {patient.firstName} {patient.lastName}
+            {patient.name}
           </Text>
           <Text style={styles.contact}>{patient.phone}</Text>
           <Text style={styles.contact}>{patient.email}</Text>
@@ -56,10 +61,12 @@ export const PatientCard: React.FC<PatientCardProps> = ({
       </View>
       
       <View style={styles.details}>
-        <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Date of Birth:</Text>
-          <Text style={styles.detailValue}>{formatDate(patient.dateOfBirth)}</Text>
-        </View>
+        {patient.dateOfBirth && (
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Date of Birth:</Text>
+            <Text style={styles.detailValue}>{formatDate(patient.dateOfBirth)}</Text>
+          </View>
+        )}
         {patient.allergies && patient.allergies !== 'None known' && (
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Allergies:</Text>

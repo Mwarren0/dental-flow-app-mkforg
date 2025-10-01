@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { IconSymbol } from './IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 
@@ -10,10 +10,11 @@ interface StatCardProps {
   icon: string;
   color: string;
   subtitle?: string;
+  onPress?: () => void;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subtitle }) => {
-  return (
+export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subtitle, onPress }) => {
+  const CardContent = () => (
     <View style={[commonStyles.card, styles.container]}>
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: color }]}>
@@ -25,12 +26,26 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, s
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </View>
   );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={styles.pressable}>
+        <CardContent />
+      </Pressable>
+    );
+  }
+
+  return <CardContent />;
 };
 
 const styles = StyleSheet.create({
+  pressable: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     minHeight: 100,
+    margin: 0,
   },
   header: {
     flexDirection: 'row',

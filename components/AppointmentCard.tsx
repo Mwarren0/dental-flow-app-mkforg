@@ -25,9 +25,9 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled': return colors.primary;
+      case 'confirmed': return colors.secondary;
       case 'completed': return colors.success;
       case 'cancelled': return colors.error;
-      case 'no-show': return colors.warning;
       default: return colors.textSecondary;
     }
   };
@@ -35,39 +35,40 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'scheduled': return 'calendar';
-      case 'completed': return 'checkmark.circle';
+      case 'confirmed': return 'checkmark.circle';
+      case 'completed': return 'checkmark.circle.fill';
       case 'cancelled': return 'xmark.circle';
-      case 'no-show': return 'exclamationmark.triangle';
       default: return 'circle';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDateTime = (dateTimeString: string) => {
+    const date = new Date(dateTimeString);
+    const dateStr = date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
     });
-  };
-
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return { dateStr, timeStr };
   };
 
   const formatPrice = (price: number) => {
     return `$${price.toFixed(2)}`;
   };
 
+  const { dateStr, timeStr } = formatDateTime(appointment.dateTime);
+
   return (
     <Pressable style={[commonStyles.card, styles.container]} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.timeSection}>
-          <Text style={styles.date}>{formatDate(appointment.date)}</Text>
-          <Text style={styles.time}>{formatTime(appointment.time)}</Text>
+          <Text style={styles.date}>{dateStr}</Text>
+          <Text style={styles.time}>{timeStr}</Text>
         </View>
         
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(appointment.status) }]}>
@@ -84,7 +85,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <View style={styles.patientSection}>
           <IconSymbol name="person.circle" color={colors.primary} size={16} />
           <Text style={styles.patientName}>
-            {patient.firstName} {patient.lastName}
+            {patient.name}
           </Text>
         </View>
       )}
@@ -93,7 +94,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <View style={styles.procedureSection}>
           <IconSymbol name="medical.thermometer" color={colors.secondary} size={16} />
           <Text style={styles.procedureName}>{procedure.name}</Text>
-          <Text style={styles.procedurePrice}>{formatPrice(appointment.totalAmount)}</Text>
+          <Text style={styles.procedurePrice}>{formatPrice(procedure.price)}</Text>
         </View>
       )}
       
@@ -104,13 +105,13 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       )}
       
       <View style={styles.actions}>
-        {onEdit && appointment.status === 'scheduled' && (
+        {onEdit && (appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
           <Pressable style={[styles.actionButton, styles.editButton]} onPress={onEdit}>
             <IconSymbol name="pencil" color={colors.primary} size={16} />
             <Text style={[styles.actionText, { color: colors.primary }]}>Edit</Text>
           </Pressable>
         )}
-        {onCancel && appointment.status === 'scheduled' && (
+        {onCancel && (appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
           <Pressable style={[styles.actionButton, styles.cancelButton]} onPress={onCancel}>
             <IconSymbol name="xmark" color={colors.error} size={16} />
             <Text style={[styles.actionText, { color: colors.error }]}>Cancel</Text>

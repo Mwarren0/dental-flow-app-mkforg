@@ -11,17 +11,16 @@ export default function AddPatientScreen() {
   const { t } = useTranslation();
   const { addPatient } = usePatients();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     phone: '',
     dateOfBirth: '',
     address: '',
     emergencyContact: '',
+    emergencyPhone: '',
     medicalHistory: '',
     allergies: '',
-    insurance: '',
-    notes: '',
+    insuranceInfo: '',
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -32,23 +31,23 @@ export default function AddPatientScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+    if (!formData.name || !formData.email || !formData.phone) {
       Alert.alert(t('common.error'), t('forms.fillRequired'));
       return;
     }
 
     try {
       await addPatient({
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        name: formData.name.trim(),
         email: formData.email,
         phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
         address: formData.address,
         emergencyContact: formData.emergencyContact,
-        emergencyPhone: '', // We don't have this field in the form yet
+        emergencyPhone: formData.emergencyPhone,
         medicalHistory: formData.medicalHistory,
         allergies: formData.allergies,
-        insuranceInfo: formData.insurance,
+        insuranceInfo: formData.insuranceInfo,
       });
       
       Alert.alert(
@@ -76,23 +75,12 @@ export default function AddPatientScreen() {
           <Text style={styles.sectionTitle}>{t('patients.patientDetails')}</Text>
           
           <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('patients.firstName')} *</Text>
+            <Text style={styles.label}>{t('patients.fullName')} *</Text>
             <TextInput
               style={styles.input}
-              value={formData.firstName}
-              onChangeText={(value) => handleInputChange('firstName', value)}
-              placeholder={t('patients.firstName')}
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('patients.lastName')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.lastName}
-              onChangeText={(value) => handleInputChange('lastName', value)}
-              placeholder={t('patients.lastName')}
+              value={formData.name}
+              onChangeText={(value) => handleInputChange('name', value)}
+              placeholder={t('patients.fullName')}
               placeholderTextColor={colors.textSecondary}
             />
           </View>
@@ -158,6 +146,18 @@ export default function AddPatientScreen() {
           </View>
 
           <View style={styles.formGroup}>
+            <Text style={styles.label}>{t('patients.emergencyPhone')}</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.emergencyPhone}
+              onChangeText={(value) => handleInputChange('emergencyPhone', value)}
+              placeholder={t('patients.emergencyPhone')}
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
             <Text style={styles.label}>{t('patients.medicalHistory')}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
@@ -187,23 +187,10 @@ export default function AddPatientScreen() {
             <Text style={styles.label}>{t('patients.insurance')}</Text>
             <TextInput
               style={styles.input}
-              value={formData.insurance}
-              onChangeText={(value) => handleInputChange('insurance', value)}
+              value={formData.insuranceInfo}
+              onChangeText={(value) => handleInputChange('insuranceInfo', value)}
               placeholder={t('patients.insurance')}
               placeholderTextColor={colors.textSecondary}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('patients.notes')}</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.notes}
-              onChangeText={(value) => handleInputChange('notes', value)}
-              placeholder={t('patients.notes')}
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              numberOfLines={4}
             />
           </View>
 

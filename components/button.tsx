@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   ActivityIndicator,
@@ -5,12 +6,11 @@ import {
   StyleSheet,
   Text,
   TextStyle,
-  useColorScheme,
   ViewStyle,
 } from "react-native";
-import { appleBlue, zincColors } from "@/constants/Colors";
+import { colors } from "@/styles/commonStyles";
 
-type ButtonVariant = "filled" | "outline" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps {
@@ -26,7 +26,7 @@ interface ButtonProps {
 
 export const Button: React.FC<ButtonProps> = ({
   onPress,
-  variant = "filled",
+  variant = "primary",
   size = "md",
   disabled = false,
   loading = false,
@@ -34,9 +34,6 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
   const sizeStyles: Record<
     ButtonSize,
     { height: number; fontSize: number; padding: number }
@@ -46,7 +43,7 @@ export const Button: React.FC<ButtonProps> = ({
     lg: { height: 55, fontSize: 18, padding: 20 },
   };
 
-  const getVariantStyle = () => {
+  const getVariantStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
       borderRadius: 12,
       flexDirection: "row",
@@ -55,17 +52,22 @@ export const Button: React.FC<ButtonProps> = ({
     };
 
     switch (variant) {
-      case "filled":
+      case "primary":
         return {
           ...baseStyle,
-          backgroundColor: isDark ? zincColors[50] : zincColors[900],
+          backgroundColor: colors.primary,
+        };
+      case "secondary":
+        return {
+          ...baseStyle,
+          backgroundColor: colors.secondary,
         };
       case "outline":
         return {
           ...baseStyle,
           backgroundColor: "transparent",
           borderWidth: 1,
-          borderColor: isDark ? zincColors[700] : zincColors[300],
+          borderColor: colors.primary,
         };
       case "ghost":
         return {
@@ -77,15 +79,17 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextColor = () => {
     if (disabled) {
-      return isDark ? zincColors[500] : zincColors[400];
+      return colors.textSecondary;
     }
 
     switch (variant) {
-      case "filled":
-        return isDark ? zincColors[900] : zincColors[50];
+      case "primary":
+      case "secondary":
+        return "white";
       case "outline":
+        return colors.primary;
       case "ghost":
-        return appleBlue;
+        return colors.text;
     }
   };
 
@@ -113,7 +117,7 @@ export const Button: React.FC<ButtonProps> = ({
               color: getTextColor(),
               textAlign: "center",
               marginBottom: 0,
-              fontWeight: "700",
+              fontWeight: "600",
             },
             textStyle,
           ])}

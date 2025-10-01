@@ -5,15 +5,17 @@ import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { StatCard } from '@/components/StatCard';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { useDashboardStats } from '@/hooks/useData';
-import { useTranslation } from 'react-i18next';
+import { useDashboardStats, usePatients, useAppointments, useProcedures } from '@/hooks/useData';
 import { supabase } from '@/app/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
 
 export default function DashboardScreen() {
   const { t } = useTranslation();
-  const { stats, loading } = useDashboardStats();
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionChecked, setConnectionChecked] = useState(false);
+  const { stats, loading: statsLoading } = useDashboardStats();
+  const { patients, loading: patientsLoading } = usePatients();
+  const { appointments, loading: appointmentsLoading } = useAppointments();
+  const { procedures, loading: proceduresLoading } = useProcedures();
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
 
   useEffect(() => {
     checkConnection();
@@ -22,68 +24,34 @@ export default function DashboardScreen() {
   const checkConnection = async () => {
     try {
       const { data, error } = await supabase.from('patients').select('count', { count: 'exact', head: true });
-      if (!error) {
-        setIsConnected(true);
-        console.log('✅ Database connected successfully!');
+      if (error) {
+        console.error('Connection check failed:', error);
+        setConnectionStatus('disconnected');
       } else {
-        setIsConnected(false);
-        console.log('❌ Database connection failed:', error);
+        console.log('Connection successful, patient count:', data);
+        setConnectionStatus('connected');
       }
     } catch (error) {
-      setIsConnected(false);
-      console.log('❌ Database connection error:', error);
-    } finally {
-      setConnectionChecked(true);
+      console.error('Connection check error:', error);
+      setConnectionStatus('disconnected');
     }
   };
 
-  const quickActions = [
-    {
-      title: t('navigation.patients'),
-      icon: 'person.2',
-      color: colors.primary,
-      route: '/patients',
-      description: t('dashboard.managePatients'),
-    },
-    {
-      title: t('navigation.appointments'),
-      icon: 'calendar',
-      color: colors.secondary,
-      route: '/appointments',
-      description: t('dashboard.scheduleAppointments'),
-    },
-    {
-      title: t('navigation.procedures'),
-      icon: 'medical.thermometer',
-      color: colors.accent,
-      route: '/procedures',
-      description: t('dashboard.manageProcedures'),
-    },
-    {
-      title: t('navigation.payments'),
-      icon: 'creditcard',
-      color: colors.success,
-      route: '/payments',
-      description: t('dashboard.trackPayments'),
-    },
-  ];
-
   const renderHeaderRight = () => (
-    <Pressable
-      onPress={() => router.push('/settings')}
-      style={styles.headerButton}
-    >
-      <IconSymbol name="gear" color={colors.primary} size={24} />
-    </Pressable>
+    <View style={styles.headerButtons}>
+      <Pressable onPress={() => router.push('/test-data')} style={styles.headerButton}>
+        <IconSymbol name="wrench" color={colors.text} size={20} />
+      </Pressable>
+      <Pressable onPress={() => router.push('/settings')} style={styles.headerButton}>
+        <IconSymbol name="gearshape" color={colors.text} size={24} />
+      </Pressable>
+    </View>
   );
 
-  if (loading) {
-    return (
-      <View style={[commonStyles.container, commonStyles.centerContent]}>
-        <Text style={commonStyles.text}>{t('common.loading')}</Text>
-      </View>
-    );
-  }
+  console.log('Dashboard render - Stats:', stats);
+  console.log('Dashboard render - Patients:', patients.length, 'loading:', patientsLoading);
+  console.log('Dashboard render - Appointments:', appointments.length, 'loading:', appointmentsLoading);
+  console.log('Dashboard render - Procedures:', procedures.length, 'loading:', proceduresLoading);
 
   return (
     <>
@@ -97,78 +65,90 @@ export default function DashboardScreen() {
       />
       <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Welcome Section */}
-          <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>{t('dashboard.welcome')}</Text>
-            <Text style={styles.welcomeSubtitle}>
-              {t('dashboard.overview')}
+          {/* Connection Status */}
+          <View style={styles.connectionStatus}>
+            <View style={[
+              styles.connectionIndicator,
+              { backgroundColor: connectionStatus === 'connected' ? colors.success : colors.error }
+            ]} />
+            <Text style={styles.connectionText}>
+              {t('dashboard.connectionStatus')}: {connectionStatus === 'connected' ? t('dashboard.connected') : t('dashboard.disconnected')}
             </Text>
-            
-            {/* Connection Status */}
-            {connectionChecked && (
-              <View style={[styles.connectionStatus, isConnected ? styles.connected : styles.disconnected]}>
-                <IconSymbol 
-                  name={isConnected ? "checkmark.circle.fill" : "xmark.circle.fill"} 
-                  color={isConnected ? colors.success : colors.error} 
-                  size={16} 
-                />
-                <Text style={[styles.connectionText, { color: isConnected ? colors.success : colors.error }]}>
-                  {isConnected ? '✅ Database Connected - All data saves automatically!' : '❌ Database Disconnected - Using offline mode'}
-                </Text>
-              </View>
-            )}
           </View>
 
-          {/* Stats Cards */}
-          <View style={styles.statsSection}>
-            <Text style={styles.sectionTitle}>{t('dashboard.todaysOverview')}</Text>
-            <View style={styles.statsGrid}>
-              <StatCard
-                title={t('dashboard.totalPatients')}
-                value={stats?.totalPatients || 0}
-                icon="person.2"
-                color={colors.primary}
-              />
-              <StatCard
-                title={t('dashboard.totalProcedures')}
-                value={stats?.totalProcedures || 0}
-                icon="medical.thermometer"
-                color={colors.secondary}
-              />
-            </View>
-            <View style={styles.statsGrid}>
-              <StatCard
-                title="Total Appointments"
-                value={stats?.totalAppointments || 0}
-                icon="calendar"
-                color={colors.accent}
-              />
-              <StatCard
-                title="Total Revenue"
-                value={`$${stats?.totalRevenue || 0}`}
-                icon="dollarsign.circle"
-                color={colors.success}
-              />
-            </View>
+          {/* Debug Info */}
+          <View style={[commonStyles.card, styles.debugCard]}>
+            <Text style={styles.debugTitle}>Debug Information</Text>
+            <Text style={styles.debugText}>Patients: {patients.length} (loading: {patientsLoading ? 'yes' : 'no'})</Text>
+            <Text style={styles.debugText}>Appointments: {appointments.length} (loading: {appointmentsLoading ? 'yes' : 'no'})</Text>
+            <Text style={styles.debugText}>Procedures: {procedures.length} (loading: {proceduresLoading ? 'yes' : 'no'})</Text>
+            <Text style={styles.debugText}>Stats loading: {statsLoading ? 'yes' : 'no'}</Text>
+            <Text style={styles.debugText}>Connection: {connectionStatus}</Text>
+            <Pressable 
+              style={styles.testButton} 
+              onPress={() => router.push('/test-data')}
+            >
+              <Text style={styles.testButtonText}>Test Data Fetching</Text>
+            </Pressable>
+          </View>
+
+          {/* Stats Grid */}
+          <View style={styles.statsGrid}>
+            <StatCard
+              title={t('dashboard.totalPatients')}
+              value={stats?.totalPatients?.toString() || '0'}
+              icon="person.2"
+              color={colors.primary}
+              onPress={() => router.push('/patients')}
+            />
+            <StatCard
+              title={t('dashboard.totalProcedures')}
+              value={stats?.totalProcedures?.toString() || '0'}
+              icon="medical.thermometer"
+              color={colors.secondary}
+              onPress={() => router.push('/procedures')}
+            />
+            <StatCard
+              title={t('dashboard.totalAppointments')}
+              value={stats?.totalAppointments?.toString() || '0'}
+              icon="calendar"
+              color={colors.accent}
+              onPress={() => router.push('/appointments')}
+            />
+            <StatCard
+              title={t('dashboard.totalRevenue')}
+              value={`$${stats?.totalRevenue?.toFixed(2) || '0.00'}`}
+              icon="dollarsign.circle"
+              color={colors.success}
+              onPress={() => router.push('/payments')}
+            />
           </View>
 
           {/* Quick Actions */}
-          <View style={styles.actionsSection}>
-            <Text style={styles.sectionTitle}>{t('dashboard.quickActions')}</Text>
-            <View style={styles.actionsGrid}>
-              {quickActions.map((action) => (
-                <Pressable
-                  key={action.route}
-                  style={[styles.actionCard, commonStyles.card]}
-                  onPress={() => router.push(action.route as any)}
-                >
-                  <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
-                    <IconSymbol name={action.icon as any} color="white" size={24} />
-                  </View>
-                  <Text style={styles.actionTitle}>{action.title}</Text>
-                  <Text style={styles.actionDescription}>{action.description}</Text>
-                </Pressable>
-              ))}
+          <View style={styles.quickActions}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <View style={styles.actionGrid}>
+              <Pressable
+                style={[styles.actionCard, { backgroundColor: colors.primary }]}
+                onPress={() => router.push('/add-patient')}
+              >
+                <IconSymbol name="person.badge.plus" color="white" size={24} />
+                <Text style={styles.actionText}>Add Patient</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.actionCard, { backgroundColor: colors.secondary }]}
+                onPress={() => router.push('/add-appointment')}
+              >
+                <IconSymbol name="calendar.badge.plus" color="white" size={24} />
+                <Text style={styles.actionText}>Schedule Appointment</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.actionCard, { backgroundColor: colors.accent }]}
+                onPress={() => router.push('/add-procedure')}
+              >
+                <IconSymbol name="plus.circle" color="white" size={24} />
+                <Text style={styles.actionText}>Add Procedure</Text>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -181,21 +161,68 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-  welcomeSection: {
-    marginBottom: 32,
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  welcomeTitle: {
-    fontSize: 28,
-    fontWeight: '700',
+  headerButton: {
+    padding: 8,
+  },
+  connectionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    padding: 12,
+    backgroundColor: colors.backgroundAlt,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  connectionIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  connectionText: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  debugCard: {
+    marginBottom: 20,
+    backgroundColor: colors.backgroundAlt,
+  },
+  debugTitle: {
+    fontSize: 16,
+    fontWeight: '600',
     color: colors.text,
     marginBottom: 8,
   },
-  welcomeSubtitle: {
-    fontSize: 16,
+  debugText: {
+    fontSize: 12,
     color: colors.textSecondary,
-    lineHeight: 22,
+    marginBottom: 4,
   },
-  statsSection: {
+  testButton: {
+    backgroundColor: colors.primary,
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  testButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 32,
+  },
+  quickActions: {
     marginBottom: 32,
   },
   sectionTitle: {
@@ -204,69 +231,24 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 16,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  actionsSection: {
-    marginBottom: 32,
-  },
-  actionsGrid: {
+  actionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
   },
   actionCard: {
-    width: '48%',
+    flex: 1,
+    minWidth: 100,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    padding: 20,
-  },
-  actionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  actionDescription: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-  headerButton: {
-    padding: 8,
-  },
-  connectionStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 8,
     gap: 8,
   },
-  connected: {
-    backgroundColor: `${colors.success}15`,
-    borderWidth: 1,
-    borderColor: `${colors.success}30`,
-  },
-  disconnected: {
-    backgroundColor: `${colors.error}15`,
-    borderWidth: 1,
-    borderColor: `${colors.error}30`,
-  },
-  connectionText: {
-    fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
+  actionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

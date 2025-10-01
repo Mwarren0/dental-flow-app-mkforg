@@ -19,7 +19,6 @@ export default function AddAppointmentScreen() {
     procedureId: '',
     date: '',
     time: '',
-    duration: '60',
     status: 'scheduled',
     notes: '',
   });
@@ -44,19 +43,24 @@ export default function AddAppointmentScreen() {
     }
 
     try {
+      // Combine date and time into a single datetime string
+      const dateTimeString = `${formData.date}T${formData.time}:00`;
+      
       await addAppointment({
-        id: Date.now().toString(),
-        ...formData,
-        duration: parseInt(formData.duration) || 60,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        patientId: formData.patientId,
+        procedureId: formData.procedureId,
+        dateTime: dateTimeString,
+        status: formData.status as 'scheduled' | 'confirmed' | 'completed' | 'cancelled',
+        notes: formData.notes,
       });
       
-      Alert.alert(t('common.success'), t('forms.saveSuccess'), [
-        { text: t('common.ok'), onPress: () => router.back() }
-      ]);
+      Alert.alert(
+        t('common.success'), 
+        '✅ Appointment saved to database successfully!',
+        [{ text: t('common.ok'), onPress: () => router.back() }]
+      );
     } catch (error) {
-      Alert.alert(t('common.error'), t('forms.saveError'));
+      Alert.alert(t('common.error'), '❌ Failed to save appointment to database. Please try again.');
       console.log('Error adding appointment:', error);
     }
   };
@@ -82,27 +86,32 @@ export default function AddAppointmentScreen() {
               onPress={() => setShowPatientPicker(!showPatientPicker)}
             >
               <Text style={[styles.pickerText, !selectedPatient && styles.placeholderText]}>
-                {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : t('common.select')}
+                {selectedPatient ? selectedPatient.name : t('common.select')}
               </Text>
               <IconSymbol name="chevron.down" color={colors.textSecondary} size={16} />
             </Pressable>
             
             {showPatientPicker && (
               <View style={styles.pickerOptions}>
-                {patients.map((patient) => (
-                  <Pressable
-                    key={patient.id}
-                    style={styles.pickerOption}
-                    onPress={() => {
-                      handleInputChange('patientId', patient.id);
-                      setShowPatientPicker(false);
-                    }}
-                  >
-                    <Text style={styles.pickerOptionText}>
-                      {patient.firstName} {patient.lastName}
-                    </Text>
-                  </Pressable>
-                ))}
+                <ScrollView style={styles.pickerScrollView} nestedScrollEnabled>
+                  {patients.map((patient) => (
+                    <Pressable
+                      key={patient.id}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        handleInputChange('patientId', patient.id);
+                        setShowPatientPicker(false);
+                      }}
+                    >
+                      <Text style={styles.pickerOptionText}>
+                        {patient.name}
+                      </Text>
+                      <Text style={styles.pickerOptionSubtext}>
+                        {patient.phone}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
               </View>
             )}
           </View>
@@ -122,20 +131,21 @@ export default function AddAppointmentScreen() {
             
             {showProcedurePicker && (
               <View style={styles.pickerOptions}>
-                {procedures.map((procedure) => (
-                  <Pressable
-                    key={procedure.id}
-                    style={styles.pickerOption}
-                    onPress={() => {
-                      handleInputChange('procedureId', procedure.id);
-                      handleInputChange('duration', procedure.duration.toString());
-                      setShowProcedurePicker(false);
-                    }}
-                  >
-                    <Text style={styles.pickerOptionText}>{procedure.name}</Text>
-                    <Text style={styles.pickerOptionSubtext}>${procedure.price}</Text>
-                  </Pressable>
-                ))}
+                <ScrollView style={styles.pickerScrollView} nestedScrollEnabled>
+                  {procedures.map((procedure) => (
+                    <Pressable
+                      key={procedure.id}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        handleInputChange('procedureId', procedure.id);
+                        setShowProcedurePicker(false);
+                      }}
+                    >
+                      <Text style={styles.pickerOptionText}>{procedure.name}</Text>
+                      <Text style={styles.pickerOptionSubtext}>${procedure.price}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
               </View>
             )}
           </View>
@@ -157,20 +167,8 @@ export default function AddAppointmentScreen() {
               style={styles.input}
               value={formData.time}
               onChangeText={(value) => handleInputChange('time', value)}
-              placeholder="HH:MM"
+              placeholder="HH:MM (24-hour format)"
               placeholderTextColor={colors.textSecondary}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('appointments.duration')} (minutes)</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.duration}
-              onChangeText={(value) => handleInputChange('duration', value)}
-              placeholder="60"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="numeric"
             />
           </View>
 
@@ -282,6 +280,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     backgroundColor: colors.background,
+    maxHeight: 200,
+  },
+  pickerScrollView: {
     maxHeight: 200,
   },
   pickerOption: {
